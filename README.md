@@ -16,13 +16,20 @@ JavaScript on the front end (no SPA framework).
   heuristic that fills the most-constrained cell first.
 - **Analyze** — reports whether the current board has conflicts and how many
   solutions exist (none / exactly one / multiple).
+- **Setter & Solve modes** — *Setter* authors a puzzle (typed digits become
+  givens); *Solve* plays it and protects the givens from being overwritten.
+- **Four input modes** — Normal digits, **Corner** and **Center** pencil marks,
+  and **Color** to tint cells — the input model the constructor community expects.
+- **Undo / redo** across digits, pencil marks, and colors (`Ctrl+Z` / `Ctrl+Shift+Z`).
+- **Light & dark themes** — toggle in the header; remembers your choice and
+  respects your system preference, applied before first paint (no flash).
 - **Live play aids** — conflict highlighting, peer (row/column/box) highlighting,
   and same-number highlighting for the selected cell.
-- **Keyboard support** — arrow keys to move, `1`–`9` to fill, `Backspace`/`Delete`
-  to clear.
+- **Keyboard support** — arrow keys to move, `1`–`9` to fill, `Shift`+digit for
+  corner marks, `Ctrl/Cmd`+digit for center marks, `Backspace`/`Delete` to clear.
 - **Timer** that starts on a new puzzle and stops on solve.
-- **Import / Export** in a custom `.sudk` format (JSON holding the board and the
-  original givens).
+- **Import / Export** in a custom `.sudk` format (JSON holding the board, the
+  original givens, and any pencil marks / cell colors).
 
 ---
 
@@ -90,14 +97,19 @@ Exporting a board produces a `.sudk` file — plain JSON:
 
 ```json
 {
-  "board":  [5, 3, 0, ... 81 values ...],
-  "givens": [true, true, false, ... 81 booleans ...]
+  "board":       [5, 3, 0, ... 81 values ...],
+  "givens":      [true, true, false, ... 81 booleans ...],
+  "cornerMarks": [[1,2], [], ... 81 arrays of digits ...],
+  "centerMarks": [[], [4,5], ... 81 arrays of digits ...],
+  "cellColors":  ["var(--c1)", null, ... 81 colors-or-null ...]
 }
 ```
 
 `board` holds the current values (`0` = empty); `givens` marks which cells were
-part of the original puzzle so they can be rendered as fixed. `.sudk` files are
-user save data and are **not** tracked in the repo.
+part of the original puzzle so they can be rendered as fixed. `cornerMarks`,
+`centerMarks`, and `cellColors` capture pencil marks and cell tints and are
+**optional** — older files containing only `board` and `givens` still import
+cleanly. `.sudk` files are user save data and are **not** tracked in the repo.
 
 ---
 

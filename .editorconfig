@@ -1,0 +1,45 @@
+# EditorConfig — keeps formatting consistent across editors and contributors.
+# https://editorconfig.org  |  https://learn.microsoft.com/dotnet/fundamentals/code-analysis/code-style-rule-options
+
+root = true
+
+# All files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+# C#
+[*.cs]
+indent_size = 4
+
+# csharp formatting
+csharp_new_line_before_open_brace = all
+csharp_prefer_braces = true:suggestion
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_using_directive_placement = outside_namespace:suggestion
+
+# 'var' usage — this project uses var freely
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:silent
+
+# expression-bodied members are used in this codebase
+csharp_style_expression_bodied_methods = true:silent
+csharp_style_expression_bodied_properties = true:suggestion
+
+# Project / config files
+[*.{csproj,props,targets}]
+indent_size = 2
+
+[*.{json,js,css,cshtml,html}]
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_size = 2
+
+# Markdown — keep trailing whitespace (it can be a hard line break)
+[*.md]
+trim_trailing_whitespace = false
