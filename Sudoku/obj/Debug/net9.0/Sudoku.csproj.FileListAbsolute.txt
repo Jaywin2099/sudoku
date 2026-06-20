@@ -21,7 +21,6 @@
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/scopedcss/Views/Shared/_Layout.cshtml.rz.scp.css
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/scopedcss/bundle/Sudoku.styles.css
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/scopedcss/projectbundle/Sudoku.bundle.scp.css
-/Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/compressed/il6mcs3hll-b9sayid5wm.gz
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/compressed/qpcx8xrdz2-61n19gt1b8.gz
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/compressed/u5qlf6ix54-xtxxf3hu2r.gz
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/compressed/ivr794xmr6-bqjiyaj88i.gz
@@ -94,3 +93,5 @@
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/Sudoku.pdb
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/Sudoku.genruntimeconfig.cache
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/ref/Sudoku.dll
+/Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/Sudoku.sourcelink.json
+/Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/compressed/il6mcs3hll-ezlg255gby.gz

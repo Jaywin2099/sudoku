@@ -1,31 +1,235 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
-
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    html { font-size: 16px; }
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
-
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* ── Home ────────────────────────────────────────────────────────────────── */
+.home-hero {
+    padding: 4rem 1rem;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+/* ── App wrapper ─────────────────────────────────────────────────────────── */
+#sudoku-app {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 1rem 0;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.sudoku-toolbar {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+.toolbar-left  { display: flex; align-items: center; gap: .5rem; flex: 1; }
+.toolbar-center { font-size: 1.3rem; font-variant-numeric: tabular-nums; font-weight: 600; min-width: 4rem; text-align: center; }
+.toolbar-right { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; justify-content: flex-end; }
+
+.difficulty-group {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .85rem;
+}
+.diff-label {
+    font-size: .8rem;
+    color: #555;
+    white-space: nowrap;
+}
+.diff-presets {
+    display: flex;
+    gap: 2px;
+}
+.btn-preset {
+    padding: 3px 8px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background: #f8f8f8;
+    cursor: pointer;
+    font-size: .78rem;
+    transition: background .12s;
+}
+.btn-preset:hover  { background: #e0e0e0; }
+.btn-preset.active { background: #1976d2; color: #fff; border-color: #1565c0; }
+
+#clue-count {
+    width: 52px;
+    padding: 3px 5px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    font-size: .85rem;
+    text-align: center;
+}
+#clue-count:focus { outline: 2px solid #1976d2; }
+
+.btn-tool {
+    padding: 4px 12px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background: #f8f8f8;
+    cursor: pointer;
+    font-size: .85rem;
+    white-space: nowrap;
+    transition: background .15s;
+}
+.btn-tool:hover        { background: #e8e8e8; }
+.btn-primary-tool      { background: #1976d2; color: #fff; border-color: #1565c0; }
+.btn-primary-tool:hover { background: #1565c0; }
+.import-label { cursor: pointer; }
+
+/* ── Main layout ─────────────────────────────────────────────────────────── */
+.sudoku-main {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+.board-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+.numpad-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* ── Board ───────────────────────────────────────────────────────────────── */
+#sudoku-board {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    width: 450px;
+    height: 450px;
+    border: 3px solid #222;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-top: 1px solid #bbb;
+    border-left: 1px solid #bbb;
+    border-bottom: 0;
+    border-right: 0;
+    box-sizing: border-box;
+    outline: none;
+    transition: background .1s;
+    background: #fff;
+    color: #1a1aff;
+}
+
+/* Box-boundary thick borders via data attributes set in JS */
+.cell[data-box-right]   { border-right: 3px solid #222; }
+.cell[data-box-bottom]  { border-bottom: 3px solid #222; }
+.cell:not([data-box-right])  { border-right: 1px solid #bbb; }
+.cell:not([data-box-bottom]) { border-bottom: 1px solid #bbb; }
+
+.cell.given {
+    color: #111;
+    font-weight: 700;
+    background: #f4f4f4;
+}
+
+.cell.selected {
+    background: #bbdefb !important;
+}
+
+.cell.peer {
+    background: #e8f4fd;
+}
+
+.cell.same-num {
+    background: #c5cae9;
+}
+
+.cell.conflict {
+    color: #c62828 !important;
+    background: #ffebee !important;
+}
+
+.cell.won {
+    background: #e8f5e9 !important;
+    color: #2e7d32 !important;
+}
+
+.cell:focus { outline: 2px solid #1976d2; outline-offset: -2px; }
+
+/* ── Numpad ───────────────────────────────────────────────────────────────── */
+#numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: 150px;
+}
+
+.num-btn {
+    height: 44px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    background: #f8f8f8;
+    cursor: pointer;
+    transition: background .15s;
+}
+.num-btn:hover { background: #ddd; }
+.erase-btn {
+    grid-column: span 3;
+    font-size: .85rem;
+    font-weight: 500;
+    height: 36px;
+}
+
+/* ── Analyze panel ───────────────────────────────────────────────────────── */
+.analyze-panel {
+    width: 160px;
+    padding: .6rem;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+    font-size: .82rem;
+    line-height: 1.4;
+}
+.analyze-panel.hidden { display: none; }
+
+.analyze-result { padding: .4rem; border-radius: 4px; }
+.analyze-good   { background: #e8f5e9; color: #1b5e20; }
+.analyze-warn   { background: #fff8e1; color: #5d4037; }
+.analyze-bad    { background: #ffebee; color: #b71c1c; }
+
+/* ── Status bar ──────────────────────────────────────────────────────────── */
+.status-bar {
+    font-size: .88rem;
+    min-height: 1.4em;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+.status-success { color: #2e7d32; font-weight: 600; font-size: 1rem; }
+.status-error   { color: #c62828; }
+.status-info    { color: #1565c0; }
+
+/* ── Focus / button resets ───────────────────────────────────────────────── */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus,
+.form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
