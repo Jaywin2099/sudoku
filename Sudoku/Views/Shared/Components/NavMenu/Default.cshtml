@@ -1,0 +1,12 @@
+@model List<Sudoku.Models.NavLink>
+
+@foreach (var link in Model)
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark"
+           asp-controller="@link.Controller"
+           asp-action="@link.Action">
+            @link.Label
+        </a>
+    </li>
+}
