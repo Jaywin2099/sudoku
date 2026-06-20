@@ -8,10 +8,12 @@ namespace Sudoku.Controllers;
 public class HomeController : Controller
 {
     private readonly SudokuService _sudoku;
+    private readonly LogicalSolver _logical;
 
-    public HomeController(SudokuService sudoku)
+    public HomeController(SudokuService sudoku, LogicalSolver logical)
     {
         _sudoku = sudoku;
+        _logical = logical;
     }
 
     public IActionResult Index() => View();
@@ -60,6 +62,16 @@ public class HomeController : Controller
         if (req?.Board is not { Length: 81 }) return BadRequest();
         var conflicts = _sudoku.GetConflicts(req.Board);
         return Json(new { conflicts });
+    }
+
+    // Deductive, human-style solve: returns the ordered named steps (with a board
+    // snapshot after each) that the logical solver took, and whether it finished.
+    [HttpPost("/api/sudoku/solve-steps")]
+    public IActionResult SolveSteps([FromBody] BoardRequest req)
+    {
+        if (req?.Board is not { Length: 81 }) return BadRequest();
+        var result = _logical.Solve(req.Board);
+        return Json(new { solved = result.Solved, steps = result.Steps, finalBoard = result.FinalBoard });
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

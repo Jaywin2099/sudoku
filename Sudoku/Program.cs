@@ -4,6 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<SudokuService>();
+builder.Services.AddSingleton<LogicalSolver>();
 
 var app = builder.Build();
 

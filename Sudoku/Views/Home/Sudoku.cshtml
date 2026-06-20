@@ -2,6 +2,57 @@
     ViewData["Title"] = "Sudoku";
 }
 
+<style>
+    /* Solve Path panel — scoped to this view so it stays out of the redesign's
+       site.css. Uses the theme tokens, so it tracks light/dark automatically. */
+    #steps-wrap.hidden { display: none; }
+    .steps-header { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+    .steps-header .card-title { margin: 0; }
+    .steps-summary { font-size: .72rem; color: var(--text-muted); }
+    .steps-summary.ok   { color: var(--good); }
+    .steps-summary.warn { color: var(--warn); }
+
+    #steps-list {
+        display: flex; flex-direction: column; gap: 4px;
+        max-height: 420px; overflow-y: auto; margin-top: .6rem;
+    }
+    .step-item {
+        display: flex; align-items: flex-start; gap: .5rem;
+        width: 100%; text-align: left; padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        background: var(--panel-sunken); color: var(--text);
+        cursor: pointer; font: inherit;
+        transition: background .12s, border-color .12s;
+    }
+    .step-item:hover  { background: var(--accent-soft); border-color: var(--accent); }
+    .step-item.active { background: var(--accent-soft); border-color: var(--accent); box-shadow: var(--shadow-sm); }
+    .step-idx {
+        flex: 0 0 auto; min-width: 1.3em; text-align: right;
+        font-size: .72rem; color: var(--text-muted);
+        font-variant-numeric: tabular-nums; padding-top: 1px;
+    }
+    .step-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .step-tech { font-size: .82rem; font-weight: 700; }
+    .step-exp  { font-size: .72rem; color: var(--text-muted); line-height: 1.3; }
+    .step-start .step-tech { color: var(--text-muted); font-weight: 600; }
+
+    /* Tier colour scale (left border). Only tier 1 appears today; the rest are
+       reserved so later techniques slot into the same visual language. */
+    .tier-1 { border-left-color: #2e9e5b; }  /* singles */
+    .tier-2 { border-left-color: #2f6df6; }  /* locked candidates */
+    .tier-3 { border-left-color: #8a5cf6; }  /* subsets */
+    .tier-4 { border-left-color: #d6457f; }  /* fish */
+    .tier-5 { border-left-color: #e6810a; }  /* wings */
+    .tier-6 { border-left-color: #d64545; }  /* chains */
+    .tier-7 { border-left-color: #8a96ad; }  /* brute force */
+
+    /* Board highlights shown while viewing a step. */
+    .cell.evidence { background: var(--warn-bg); }
+    .cell.placed   { background: var(--good-bg) !important; color: var(--good) !important; box-shadow: inset 0 0 0 2px var(--good); }
+</style>
+
 <div id="sudoku-app">
     <div class="app-header">
         <h1 class="app-title">Sudoku</h1>
@@ -82,6 +133,7 @@
                 <div class="tools-grid">
                     <button id="btn-solve" class="btn-tool">Solve</button>
                     <button id="btn-analyze" class="btn-tool">Analyze</button>
+                    <button id="btn-steps" class="btn-tool">Solve Path</button>
                     <button id="btn-clear" class="btn-tool">Clear Board</button>
                     <button id="btn-clear-givens" class="btn-tool">Clear Givens</button>
                     <button id="btn-export" class="btn-tool">Export .sudk</button>
@@ -92,6 +144,14 @@
                 </div>
 
                 <div id="analyze-panel" class="analyze-panel hidden"></div>
+            </div>
+
+            <div class="card-panel hidden" id="steps-wrap">
+                <div class="steps-header">
+                    <h2 class="card-title">Solve Path</h2>
+                    <span id="steps-summary" class="steps-summary"></span>
+                </div>
+                <div id="steps-list"></div>
             </div>
         </div>
     </div>
@@ -117,6 +177,11 @@
     let activeColor = 1;          // 1..7 palette index, 0 = erase
     let seconds = 0, timerInterval = null;
     let undoStack = [], redoStack = [];
+
+    // Solve-path (deductive solver) state
+    let solvePathBase = null;   // the puzzle we solved, preserved across step navigation
+    let pathSteps     = [];     // SolveStep[] from /api/sudoku/solve-steps
+    let stepHighlight = null;   // { evidence:Set, placed:Set } — applied by renderBoard
 
     // ── Init ────────────────────────────────────────────────────────────────────
     buildGrid();
@@ -172,6 +237,10 @@
             if (selected !== -1 && isPeer(i, selected))                      cell.classList.add('peer');
             if (selected !== -1 && board[i] && board[i] === board[selected]) cell.classList.add('same-num');
             if (conflicts.has(i))                                            cell.classList.add('conflict');
+            if (stepHighlight) {
+                if (stepHighlight.evidence.has(i)) cell.classList.add('evidence');
+                if (stepHighlight.placed.has(i))   cell.classList.add('placed');
+            }
         });
     }
 
@@ -222,6 +291,7 @@
         won = false;
         setStatus('');
         hideAnalyze();
+        resetPath();
         if (boardMode === 'solve') checkWin();
         renderBoard();
         updateHistoryButtons();
@@ -293,6 +363,7 @@
         conflicts = new Set();
         setStatus('');
         hideAnalyze();
+        resetPath();
         if (boardMode === 'solve') checkWin();
         renderBoard();
         updateHistoryButtons();
@@ -385,6 +456,7 @@
                 won = false;
                 clearHistory();
                 hideAnalyze();
+                resetPath();
                 applyBoardMode('solve');
                 resetTimer();
                 startTimer();
@@ -402,6 +474,7 @@
         won = false;
         selected = -1;
         hideAnalyze();
+        resetPath();
         stopTimer();
         setStatus('');
         renderBoard();
@@ -427,6 +500,7 @@
             if (data.solvable) {
                 pushHistory();
                 board = data.board;
+                resetPath();
                 won = false;
                 conflicts = new Set();
                 stopTimer();
@@ -474,6 +548,89 @@
         panel.innerHTML = '';
     }
 
+    // ── Solve path (deductive solver) ───────────────────────────────────────────
+    function solvePath() {
+        if (!solvePathBase) solvePathBase = board.slice();
+        setStatus('Solving…');
+        fetch('/api/sudoku/solve-steps', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ board: solvePathBase })
+        })
+        .then(r => r.json())
+        .then(data => {
+            pathSteps = data.steps || [];
+            renderStepsList(data);
+            setStatus('');
+            showStep(-1);   // start node = puzzle as given
+        });
+    }
+
+    function renderStepsList(data) {
+        const wrap    = document.getElementById('steps-wrap');
+        const list    = document.getElementById('steps-list');
+        const summary = document.getElementById('steps-summary');
+        wrap.classList.remove('hidden');
+
+        const n = pathSteps.length;
+        summary.textContent = data.solved
+            ? `solved in ${n} step${n === 1 ? '' : 's'}`
+            : `stopped after ${n} (needs more than singles)`;
+        summary.className = 'steps-summary ' + (data.solved ? 'ok' : 'warn');
+
+        let html = `<button class="step-item step-start" data-k="-1">
+            <span class="step-idx">0</span>
+            <span class="step-body"><span class="step-tech">Start</span>
+            <span class="step-exp">puzzle as given</span></span></button>`;
+
+        pathSteps.forEach((s, k) => {
+            html += `<button class="step-item tier-${s.tier}" data-k="${k}">
+                <span class="step-idx">${k + 1}</span>
+                <span class="step-body">
+                    <span class="step-tech">${s.technique}</span>
+                    <span class="step-exp">${s.explanation}</span>
+                </span></button>`;
+        });
+        list.innerHTML = html;
+
+        list.querySelectorAll('.step-item').forEach(btn =>
+            btn.addEventListener('click', () => showStep(parseInt(btn.dataset.k))));
+    }
+
+    // Viewing a solver step takes over the board display: show that snapshot on a
+    // clean slate (no pencil marks / colors) so the evidence + placed highlights read.
+    function showStep(k) {
+        won = false;
+        conflicts = new Set();
+        selected = -1;
+        resetMarks();
+
+        if (k < 0) {
+            board = solvePathBase.slice();
+            stepHighlight = null;
+        } else {
+            const s = pathSteps[k];
+            board = s.boardAfter.slice();
+            stepHighlight = {
+                evidence: new Set(s.evidenceCells || []),
+                placed:   new Set((s.placements || []).map(p => p.cell))
+            };
+        }
+        renderBoard();
+        document.querySelectorAll('.step-item').forEach(btn =>
+            btn.classList.toggle('active', parseInt(btn.dataset.k) === k));
+    }
+
+    function resetPath() {
+        solvePathBase = null;
+        pathSteps = [];
+        stepHighlight = null;
+        const wrap = document.getElementById('steps-wrap');
+        if (wrap) wrap.classList.add('hidden');
+        const list = document.getElementById('steps-list');
+        if (list) list.innerHTML = '';
+    }
+
     // ── Import / Export ─────────────────────────────────────────────────────────
     function exportBoard() {
         const payload = {
@@ -508,6 +665,7 @@
                 won = false;
                 clearHistory();
                 hideAnalyze();
+                resetPath();
                 stopTimer();
                 document.getElementById('timer').textContent = '0:00';
                 setStatus('Puzzle imported.', 'info');
@@ -546,6 +704,7 @@
         document.getElementById('btn-clear-givens').addEventListener('click', clearGivens);
         document.getElementById('btn-solve').addEventListener('click', solveBoard);
         document.getElementById('btn-analyze').addEventListener('click', analyzeBoard);
+        document.getElementById('btn-steps').addEventListener('click', solvePath);
         document.getElementById('btn-export').addEventListener('click', exportBoard);
         document.getElementById('btn-undo').addEventListener('click', undo);
         document.getElementById('btn-redo').addEventListener('click', redo);
