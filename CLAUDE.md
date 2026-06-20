@@ -18,24 +18,34 @@ overview; this file is the developer/process context.
 Requires the .NET 9 SDK.
 
 ```bash
-cd Sudoku
 dotnet run        # serves on the URL printed to console
 dotnet build      # build only (this command is pre-approved in settings.local.json)
+dotnet test Sudoku.Tests   # runs the xUnit suite (MUST name the project — see below)
 ```
 
-The app entry point is [Sudoku/Program.cs](Sudoku/Program.cs); `SudokuService`
-is registered as a singleton.
+> Because the app project is at the repo root, a bare `dotnet test` targets the
+> web app (no tests). Always pass `Sudoku.Tests`.
+
+The app entry point is [Program.cs](Program.cs); `SudokuService` is registered as
+a singleton.
 
 ## Layout
 
-```
-Sudoku/
+The project lives at the **repository root** — it is not nested in a `Sudoku/`
+subfolder (flattened on the `flatten-project-root` branch).
+
+```text
+.
+├── Sudoku.csproj                # The web app project (repo root)
 ├── Program.cs                   # Bootstrap + DI
 ├── Controllers/HomeController.cs# Pages + JSON API
 ├── Services/SudokuService.cs    # The whole puzzle engine
+├── Services/LogicalSolver.cs    # Human-style technique solver (in progress)
+├── Services/SolveStep.cs        # One deduced step (technique + cells)
 ├── Models/                      # ErrorViewModel, NavLink
 ├── Views/Home/Sudoku.cshtml     # Game UI + ALL client-side game logic (one file)
-└── wwwroot/                     # css, js, bootstrap & jquery libs
+├── wwwroot/                     # css, js, bootstrap & jquery libs
+└── Sudoku.Tests/                # xUnit tests for SudokuService
 ```
 
 ## Core engine — `SudokuService`
