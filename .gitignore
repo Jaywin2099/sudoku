@@ -1,0 +1,73 @@
+# ──────────────────────────────────────────────────────────────────────────
+# .NET build output
+# ──────────────────────────────────────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Dd]ebug/
+[Rr]elease/
+[Dd]ebugPublic/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+publish/
+*.dll
+*.pdb
+*.exe
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+
+# Static-web-asset & Razor build caches
+*.cache
+staticwebassets.*.json
+
+# ──────────────────────────────────────────────────────────────────────────
+# IDE / editor
+# ──────────────────────────────────────────────────────────────────────────
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.swp
+*~
+
+# ──────────────────────────────────────────────────────────────────────────
+# OS junk
+# ──────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ──────────────────────────────────────────────────────────────────────────
+# Sudoku app artifacts
+# .sudk is the app's exported puzzle format (JSON board + givens) — these are
+# user save files, not source, so we never commit them.
+# ──────────────────────────────────────────────────────────────────────────
+*.sudk
+
+# ──────────────────────────────────────────────────────────────────────────
+# Local secrets / environment overrides
+# ──────────────────────────────────────────────────────────────────────────
+appsettings.*.local.json
+*.env
+.env
+secrets.json
+
+# ──────────────────────────────────────────────────────────────────────────
+# Logs
+# ──────────────────────────────────────────────────────────────────────────
+*.log
+logs/
