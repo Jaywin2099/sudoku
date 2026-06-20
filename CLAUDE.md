@@ -60,23 +60,53 @@ Board = flat `int[81]`, row-major, `0` = empty. Methods:
 
 ## Front end (Sudoku.cshtml)
 
-All game logic lives in one IIFE `<script>` block at the bottom of the view —
-state (`board`, `givens`, `selected`, `conflicts`, `won`, timer), grid build,
-render, input, API calls, analyze panel, import/export, timer. There is also a
+All game logic lives in one IIFE `<script>` block at the bottom of the view.
+State: `board`, `givens`, `cornerMarks`/`centerMarks` (arrays of 81 `Set`s),
+`cellColors` (81 colors or null), `selected`, `conflicts`, `won`, `mode` (input
+mode), `boardMode` (setter/solve), `undoStack`/`redoStack`, timer. Plus grid
+build, render, input, API calls, analyze panel, import/export. There is also a
 *client-side* conflict checker (`localConflicts`) used for win detection so a
 solve doesn't require a round-trip.
+
+**Visual design** lives in `wwwroot/css/site.css` as **CSS custom properties**
+(design tokens) on `:root` (light) and `[data-theme="dark"]` (dark). Theme is
+applied to `<html data-theme>` by a tiny pre-paint script in `_Layout.cshtml`
+(reads `localStorage['sudoku-theme']`, falls back to `prefers-color-scheme`) so
+there's no flash; the in-app sun/moon button toggles + persists it. Layout:
+header + board (left) + two stacked cards (right) — an **Input card** (4-mode
+selector / numpad / color palette / undo-redo) and a **Puzzle-tools card**
+(generate / solve / analyze / I-O). The Puzzle-tools card is the intended future
+home of the technique-solver **reverse-tree inspector**.
+
+### Input modes & interactions
+
+- **Four input modes** (`mode`): Normal (place digit), Corner / Center (pencil
+  marks, only on empty cells), Color (tint via the palette). The numpad and digit
+  keys act according to the active mode. **Keyboard accelerators** bypass the mode:
+  **Shift+digit = corner**, **Ctrl/Cmd+digit = center** (see `enterValue(idx,val,forceMode)`).
+- **Undo/redo** snapshot the whole mutable state (`cloneState`/`applyState`);
+  `pushHistory()` is called *before* every mutation. Ctrl+Z / Ctrl+Shift+Z (or Ctrl+Y).
 
 ### Conventions & gotchas
 
 - **Cell borders are set once as inline styles** in `buildGrid()` and are never
-  touched by class changes. This is deliberate — `renderBoard()` rewrites
-  `className` every frame, so border styling must NOT live in classes or the 3px
-  box separators would flicker/disappear. (Commit `eb49fe1` fixed a padding
+  touched by class/`innerHTML` changes. This is deliberate — `renderBoard()`
+  rewrites each cell's `className` AND `innerHTML` every frame (digits + pencil
+  marks), so border styling must NOT live in classes or the 3px box separators
+  would flicker/disappear. Setting `innerHTML`/`className` does not clear an
+  element's inline styles, so borders survive. (Commit `eb49fe1` fixed a padding
   regression around this.) Don't move border logic into CSS classes.
-- `givens` is **visual-only** — it marks original puzzle cells for styling; it is
-  not enforced (players can overwrite, which is intentional for the editor use).
-- `.sudk` is the app's export format: JSON `{ board, givens }`. It's user save
-  data — **gitignored**, never committed.
+- **Cell color** is applied as an inline `background` in `renderBoard()` so it
+  shows over the (non-`!important`) peer/same-num tints; selection/conflict/won
+  use `!important` and intentionally show on top of a cell color.
+- `givens` is **visual-only in Setter mode** (you author clues — typing sets a
+  given) but **protected in Solve mode** (given cells can't be overwritten with a
+  digit). This is a deliberate change from the old "givens never enforced"
+  behavior, made safe by the explicit `boardMode` split.
+- `.sudk` is the app's export format: JSON `{ board, givens, cornerMarks,
+  centerMarks, cellColors }`. The mark/color fields are **optional** — older
+  `{ board, givens }`-only files still import cleanly (`importBoard` tolerates
+  missing fields). It's user save data — **gitignored**, never committed.
 
 ## Build artifacts & .gitignore
 

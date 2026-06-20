@@ -1,224 +1,466 @@
-html {
-    font-size: 14px;
-}
-@media (min-width: 768px) {
-    html { font-size: 16px; }
+/* ════════════════════════════════════════════════════════════════════════════
+   Sudoku — Modern Studio theme
+   Design tokens live on :root (light) and [data-theme="dark"] (dark). Every
+   component references tokens, so theming is a one-attribute switch on <html>.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* surfaces */
+    --bg:            #eef1f6;
+    --surface:       #ffffff;
+    --panel:         #ffffff;
+    --panel-sunken:  #f4f6fa;
+    /* text */
+    --text:          #1c2230;
+    --text-muted:    #66708a;
+    /* lines */
+    --border:        #d8dee9;
+    --border-strong: #c0c8d6;
+    --grid-thin:     #c3cad6;
+    --grid-thick:    #2a3142;
+    /* accent */
+    --accent:        #2f6df6;
+    --accent-hover:  #2257d6;
+    --accent-soft:   #e4edff;
+    --on-accent:     #ffffff;
+    /* digits */
+    --given:         #1c2230;   /* original clue digits */
+    --entered:       #2f6df6;   /* player-entered digits */
+    /* cell states */
+    --cell:          #ffffff;
+    --cell-given:    #f1f4f9;
+    --selected:      #cfe0ff;
+    --peer:          #eaf1ff;
+    --same-num:      #d6def5;
+    --conflict-bg:   #ffe4e4;
+    --conflict-fg:   #d32f2f;
+    --won-bg:        #def7e6;
+    --won-fg:        #1d8a4e;
+    /* feedback */
+    --good:          #1d8a4e;
+    --good-bg:       #def7e6;
+    --warn:          #9a6a00;
+    --warn-bg:       #fff3d6;
+    --bad:           #c62828;
+    --bad-bg:        #ffe4e4;
+    --info:          #2257d6;
+    /* cell coloring palette (Color mode) */
+    --c1: #ffd5d5;  --c2: #ffe6c0;  --c3: #fff4bf;
+    --c4: #cdeccd;  --c5: #c7e3ff;  --c6: #e0d2f7;
+    --c7: #d9dee6;  --c8: #ffffff;
+    /* shape */
+    --radius:        14px;
+    --radius-sm:     8px;
+    --shadow:        0 1px 2px rgba(20,30,55,.06), 0 8px 24px rgba(20,30,55,.08);
+    --shadow-sm:     0 1px 2px rgba(20,30,55,.08);
+    --cell-size:     56px;
 }
 
-html {
-    position: relative;
-    min-height: 100%;
+[data-theme="dark"] {
+    --bg:            #11151d;
+    --surface:       #1a2030;
+    --panel:         #1a2030;
+    --panel-sunken:  #141926;
+    --text:          #e7ecf5;
+    --text-muted:    #8a96ad;
+    --border:        #2a3142;
+    --border-strong: #38415a;
+    --grid-thin:     #313a4f;
+    --grid-thick:    #aab6cf;
+    --accent:        #5b8cff;
+    --accent-hover:  #6f9bff;
+    --accent-soft:   #1f2c4a;
+    --on-accent:     #0c1018;
+    --given:         #e7ecf5;
+    --entered:       #6fa0ff;
+    --cell:          #1d2434;
+    --cell-given:    #161c29;
+    --selected:      #2c437a;
+    --peer:          #222c44;
+    --same-num:      #33406a;
+    --conflict-bg:   #4a2230;
+    --conflict-fg:   #ff8a8a;
+    --won-bg:        #1d3a2a;
+    --won-fg:        #6ee7a0;
+    --good:          #6ee7a0;
+    --good-bg:       #18351f;
+    --warn:          #ffce6b;
+    --warn-bg:       #3a2f12;
+    --bad:           #ff8a8a;
+    --bad-bg:        #3f1f25;
+    --info:          #6fa0ff;
+    --c1: #6e3b3b;  --c2: #6e5333;  --c3: #6b6230;
+    --c4: #38583a;  --c5: #2f4d6e;  --c6: #4a3e63;
+    --c7: #3a4356;  --c8: #1d2434;
+    --shadow:        0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.5);
+    --shadow-sm:     0 1px 2px rgba(0,0,0,.4);
 }
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+html { font-size: 15px; }
+@media (min-width: 768px) { html { font-size: 16px; } }
+html { position: relative; min-height: 100%; }
+
 body {
-    margin-bottom: 60px;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background .2s ease, color .2s ease;
 }
 
-/* ── Home ────────────────────────────────────────────────────────────────── */
-.home-hero {
-    padding: 4rem 1rem;
+/* ── Top nav (Bootstrap navbar overrides) ───────────────────────────────────── */
+.navbar {
+    background: var(--surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+    box-shadow: var(--shadow-sm);
 }
+.navbar-brand, .navbar .nav-link { color: var(--text) !important; font-weight: 600; }
+.navbar .nav-link:hover { color: var(--accent) !important; }
 
-/* ── App wrapper ─────────────────────────────────────────────────────────── */
+.container { max-width: 1100px; }
+
+/* ── Landing hero ───────────────────────────────────────────────────────────── */
+.home-hero { padding: 5rem 1rem; text-align: center; }
+.home-hero .display-4 { font-weight: 800; letter-spacing: -.02em; }
+.home-hero .lead { color: var(--text-muted); }
+.home-hero .btn-primary {
+    background: var(--accent); border-color: var(--accent);
+    border-radius: 999px; padding: .7rem 2.2rem; font-weight: 600;
+}
+.home-hero .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   App
+   ════════════════════════════════════════════════════════════════════════════ */
 #sudoku-app {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    max-width: 720px;
+    gap: 1.1rem;
+    max-width: 980px;
     margin: 0 auto;
-    padding: 1rem 0;
+    padding: 1rem .5rem 2rem;
 }
 
-/* ── Toolbar ─────────────────────────────────────────────────────────────── */
-.sudoku-toolbar {
+/* ── Header ──────────────────────────────────────────────────────────────────── */
+.app-header {
     display: flex;
     align-items: center;
-    gap: .5rem;
+    gap: .8rem;
     flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: .7rem .9rem;
 }
-.toolbar-left  { display: flex; align-items: center; gap: .5rem; flex: 1; }
-.toolbar-center { font-size: 1.3rem; font-variant-numeric: tabular-nums; font-weight: 600; min-width: 4rem; text-align: center; }
-.toolbar-right { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; justify-content: flex-end; }
+.app-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    margin: 0;
+    margin-right: .2rem;
+}
+.header-spacer { flex: 1; }
 
-.difficulty-group {
-    display: flex;
+.timer {
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--text);
+    display: inline-flex;
     align-items: center;
-    gap: .4rem;
-    font-size: .85rem;
+    gap: .35rem;
 }
-.diff-label {
-    font-size: .8rem;
-    color: #555;
-    white-space: nowrap;
+.timer::before { content: "◷"; color: var(--text-muted); font-weight: 400; }
+
+/* difficulty group */
+.difficulty-group { display: flex; align-items: center; gap: .4rem; }
+.diff-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+#clue-count {
+    width: 52px; padding: 4px 6px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--panel-sunken); color: var(--text);
+    font-size: .85rem; text-align: center;
 }
-.diff-presets {
-    display: flex;
+#clue-count:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ── Segmented controls (shared) ───────────────────────────────────────────────── */
+.segmented {
+    display: inline-flex;
+    background: var(--panel-sunken);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
     gap: 2px;
 }
-.btn-preset {
-    padding: 3px 8px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    background: #f8f8f8;
+.segmented button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: .8rem;
+    font-weight: 600;
+    padding: 5px 13px;
+    border-radius: 999px;
     cursor: pointer;
-    font-size: .78rem;
-    transition: background .12s;
-}
-.btn-preset:hover  { background: #e0e0e0; }
-.btn-preset.active { background: #1976d2; color: #fff; border-color: #1565c0; }
-
-#clue-count {
-    width: 52px;
-    padding: 3px 5px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    font-size: .85rem;
-    text-align: center;
-}
-#clue-count:focus { outline: 2px solid #1976d2; }
-
-.btn-tool {
-    padding: 4px 12px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    background: #f8f8f8;
-    cursor: pointer;
-    font-size: .85rem;
+    transition: background .15s, color .15s;
     white-space: nowrap;
-    transition: background .15s;
 }
-.btn-tool:hover        { background: #e8e8e8; }
-.btn-primary-tool      { background: #1976d2; color: #fff; border-color: #1565c0; }
-.btn-primary-tool:hover { background: #1565c0; }
-.import-label { cursor: pointer; }
+.segmented button:hover { color: var(--text); }
+.segmented button.active {
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--shadow-sm);
+}
 
-/* ── Main layout ─────────────────────────────────────────────────────────── */
+/* icon button (theme toggle etc.) */
+.icon-btn {
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border); border-radius: 999px;
+    background: var(--panel-sunken); color: var(--text);
+    cursor: pointer; font-size: 1.05rem;
+    transition: background .15s, border-color .15s;
+}
+.icon-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+/* ── Main layout ─────────────────────────────────────────────────────────────── */
 .sudoku-main {
     display: flex;
-    gap: 1.5rem;
+    gap: 1.1rem;
     align-items: flex-start;
     flex-wrap: wrap;
 }
-.board-wrap {
+.board-col { display: flex; flex-direction: column; gap: .6rem; }
+.controls-col {
     display: flex;
     flex-direction: column;
-    gap: .5rem;
-}
-.numpad-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    gap: 1.1rem;
+    flex: 1;
+    min-width: 240px;
+    max-width: 320px;
 }
 
-/* ── Board ───────────────────────────────────────────────────────────────── */
+/* ── Cards ───────────────────────────────────────────────────────────────────── */
+.card-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1rem;
+}
+.card-title {
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin: 0 0 .7rem;
+}
+
+/* ── Board ───────────────────────────────────────────────────────────────────── */
+.board-frame {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 12px;
+    width: max-content;
+    /* accent ring tells you which authoring mode you're in */
+    box-shadow: var(--shadow), inset 0 0 0 2px transparent;
+    transition: box-shadow .2s;
+}
+.board-frame.setter { box-shadow: var(--shadow), inset 0 0 0 2px var(--accent); }
+
 #sudoku-board {
     display: grid;
-    grid-template-columns: repeat(9, 50px);
-    grid-template-rows: repeat(9, 50px);
-    border: 3px solid #222;
+    grid-template-columns: repeat(9, var(--cell-size));
+    grid-template-rows: repeat(9, var(--cell-size));
+    border: 3px solid var(--grid-thick);
+    border-radius: 4px;
+    overflow: hidden;
     user-select: none;
+    background: var(--cell);
 }
 
 .cell {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.7rem;
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
     /* borders are set as inline styles in buildGrid() and never change */
     box-sizing: border-box;
     outline: none;
-    transition: background .1s;
-    background: #fff;
-    color: #1a1aff;
+    transition: background .08s;
+    background: var(--cell);
+    color: var(--entered);
+    font-variant-numeric: tabular-nums;
 }
+.cell.given   { color: var(--given); background: var(--cell-given); font-weight: 700; }
+.cell.peer    { background: var(--peer); }
+.cell.same-num{ background: var(--same-num); }
+.cell.selected{ background: var(--selected) !important; }
+.cell.conflict{ color: var(--conflict-fg) !important; background: var(--conflict-bg) !important; }
+.cell.won     { background: var(--won-bg) !important; color: var(--won-fg) !important; }
+.cell:focus   { box-shadow: inset 0 0 0 2px var(--accent); }
 
-.cell.given {
-    color: #111;
-    background: #f4f4f4;
-}
-
-.cell.selected {
-    background: #bbdefb !important;
-}
-
-.cell.peer {
-    background: #e8f4fd;
-}
-
-.cell.same-num {
-    background: #c5cae9;
-}
-
-.cell.conflict {
-    color: #c62828 !important;
-    background: #ffebee !important;
-}
-
-.cell.won {
-    background: #e8f5e9 !important;
-    color: #2e7d32 !important;
-}
-
-.cell:focus { outline: 2px solid #1976d2; outline-offset: -2px; }
-
-/* ── Numpad ───────────────────────────────────────────────────────────────── */
-#numpad {
+/* pencil marks */
+.cell .corner-marks {
+    position: absolute;
+    inset: 3px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    width: 150px;
-}
-
-.num-btn {
-    height: 44px;
-    font-size: 1.1rem;
+    grid-template-rows: repeat(3, 1fr);
+    font-size: .62rem;
     font-weight: 600;
-    border: 1px solid #bbb;
-    border-radius: 6px;
-    background: #f8f8f8;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+.cell .corner-marks span { display: flex; align-items: center; justify-content: center; }
+/* place the up-to-9 corner digits: TL TR BL BR then edges then center */
+.cell .corner-marks span:nth-child(1){ grid-area: 1/1; justify-content:flex-start; align-items:flex-start; }
+.cell .corner-marks span:nth-child(2){ grid-area: 1/3; justify-content:flex-end;   align-items:flex-start; }
+.cell .corner-marks span:nth-child(3){ grid-area: 3/1; justify-content:flex-start; align-items:flex-end; }
+.cell .corner-marks span:nth-child(4){ grid-area: 3/3; justify-content:flex-end;   align-items:flex-end; }
+.cell .corner-marks span:nth-child(5){ grid-area: 1/2; align-items:flex-start; }
+.cell .corner-marks span:nth-child(6){ grid-area: 3/2; align-items:flex-end; }
+.cell .corner-marks span:nth-child(7){ grid-area: 2/1; justify-content:flex-start; }
+.cell .corner-marks span:nth-child(8){ grid-area: 2/3; justify-content:flex-end; }
+.cell .corner-marks span:nth-child(9){ grid-area: 2/2; }
+.cell .center-marks {
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: .5px;
+    pointer-events: none;
+    padding: 0 2px;
+    text-align: center;
+}
+
+/* ── Input card: mode selector ─────────────────────────────────────────────────── */
+.mode-selector { width: 100%; display: flex; margin-bottom: .9rem; }
+.mode-selector button { flex: 1; }
+
+/* numpad */
+#numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.num-btn {
+    height: 52px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--panel-sunken);
+    color: var(--text);
     cursor: pointer;
-    transition: background .15s;
+    transition: background .12s, transform .05s;
 }
-.num-btn:hover { background: #ddd; }
-.erase-btn {
-    grid-column: span 3;
-    font-size: .85rem;
-    font-weight: 500;
-    height: 36px;
-}
+.num-btn:hover  { background: var(--accent-soft); border-color: var(--accent); }
+.num-btn:active { transform: translateY(1px); }
+.erase-btn { grid-column: span 3; font-size: .9rem; font-weight: 600; height: 42px; }
 
-/* ── Analyze panel ───────────────────────────────────────────────────────── */
-.analyze-panel {
-    width: 160px;
-    padding: .6rem;
+/* color palette */
+.color-palette { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: .9rem; }
+.color-palette.hidden { display: none; }
+.swatch {
+    aspect-ratio: 1;
+    border: 1px solid var(--border-strong);
     border-radius: 6px;
-    border: 1px solid #ddd;
-    background: #fafafa;
-    font-size: .82rem;
-    line-height: 1.4;
+    cursor: pointer;
+    transition: transform .05s, box-shadow .12s;
 }
-.analyze-panel.hidden { display: none; }
+.swatch:hover  { box-shadow: 0 0 0 2px var(--accent); }
+.swatch.active { box-shadow: 0 0 0 2px var(--accent); }
+.swatch.erase  { display: flex; align-items: center; justify-content: center; font-size: .8rem; color: var(--text-muted); background: var(--panel-sunken); }
 
-.analyze-result { padding: .4rem; border-radius: 4px; }
-.analyze-good   { background: #e8f5e9; color: #1b5e20; }
-.analyze-warn   { background: #fff8e1; color: #5d4037; }
-.analyze-bad    { background: #ffebee; color: #b71c1c; }
+/* undo/redo row */
+.history-row { display: flex; gap: 8px; margin-top: .9rem; }
+.history-row .btn-tool { flex: 1; }
 
-/* ── Status bar ──────────────────────────────────────────────────────────── */
+/* ── Buttons (tool) ────────────────────────────────────────────────────────────── */
+.btn-tool {
+    padding: 8px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--panel-sunken);
+    color: var(--text);
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+    transition: background .12s, border-color .12s;
+}
+.btn-tool:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent); }
+.btn-tool:disabled { opacity: .45; cursor: default; }
+.btn-primary-tool { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn-primary-tool:hover:not(:disabled) { background: var(--accent-hover) !important; border-color: var(--accent-hover) !important; color: var(--on-accent) !important; }
+.import-label { display: inline-block; }
+
+/* puzzle-tools card grid */
+.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tools-grid .span-2 { grid-column: span 2; }
+.preset-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: .7rem; }
+.btn-preset {
+    padding: 6px 4px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--panel-sunken);
+    color: var(--text);
+    cursor: pointer;
+    font-size: .78rem;
+    font-weight: 600;
+    transition: background .12s;
+}
+.btn-preset:hover  { background: var(--accent-soft); }
+.btn-preset.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.clue-inline { display: flex; align-items: center; gap: .5rem; margin-bottom: .8rem; }
+.clue-inline .diff-label { flex: 1; }
+
+/* ── Status + analyze ──────────────────────────────────────────────────────────── */
 .status-bar {
-    font-size: .88rem;
+    font-size: .9rem;
     min-height: 1.4em;
-    padding: 2px 4px;
-    border-radius: 4px;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    color: var(--text-muted);
 }
-.status-success { color: #2e7d32; font-weight: 600; font-size: 1rem; }
-.status-error   { color: #c62828; }
-.status-info    { color: #1565c0; }
+.status-success { color: var(--won-fg); font-weight: 700; font-size: 1.05rem; }
+.status-error   { color: var(--bad); }
+.status-info    { color: var(--info); }
 
-/* ── Focus / button resets ───────────────────────────────────────────────── */
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus,
-.form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.analyze-panel { margin-top: .8rem; }
+.analyze-panel.hidden { display: none; }
+.analyze-result { padding: .6rem .7rem; border-radius: var(--radius-sm); font-size: .85rem; line-height: 1.4; }
+.analyze-good { background: var(--good-bg); color: var(--good); }
+.analyze-warn { background: var(--warn-bg); color: var(--warn); }
+.analyze-bad  { background: var(--bad-bg);  color: var(--bad); }
+
+/* ── Footer ───────────────────────────────────────────────────────────────────── */
+.footer {
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    background: var(--surface);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────────── */
+@media (max-width: 820px) {
+    :root { --cell-size: 40px; }
+    .controls-col { max-width: none; width: 100%; }
+    .sudoku-main { justify-content: center; }
+    .board-col { align-items: center; width: 100%; }
+}
+@media (max-width: 420px) {
+    :root { --cell-size: 34px; }
+    .cell { font-size: 1.25rem; }
+}
+
+/* focus reset for bootstrap controls */
+.btn:focus, .btn:active:focus, .form-control:focus {
+    box-shadow: 0 0 0 .2rem var(--accent-soft);
 }
