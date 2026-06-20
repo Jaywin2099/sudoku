@@ -112,11 +112,9 @@ body {
 /* ── Board ───────────────────────────────────────────────────────────────── */
 #sudoku-board {
     display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    width: 450px;
-    height: 450px;
+    grid-template-columns: repeat(9, 50px);
+    grid-template-rows: repeat(9, 50px);
     border: 3px solid #222;
-    box-sizing: border-box;
     user-select: none;
 }
 
@@ -125,12 +123,10 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 1.25rem;
-    font-weight: 500;
+    font-weight: 600;
+    line-height: 1;
     cursor: pointer;
-    border-top: 1px solid #bbb;
-    border-left: 1px solid #bbb;
-    border-bottom: 0;
-    border-right: 0;
+    /* borders are set as inline styles in buildGrid() and never change */
     box-sizing: border-box;
     outline: none;
     transition: background .1s;
@@ -138,15 +134,8 @@ body {
     color: #1a1aff;
 }
 
-/* Box-boundary thick borders via data attributes set in JS */
-.cell[data-box-right]   { border-right: 3px solid #222; }
-.cell[data-box-bottom]  { border-bottom: 3px solid #222; }
-.cell:not([data-box-right])  { border-right: 1px solid #bbb; }
-.cell:not([data-box-bottom]) { border-bottom: 1px solid #bbb; }
-
 .cell.given {
     color: #111;
-    font-weight: 700;
     background: #f4f4f4;
 }
 

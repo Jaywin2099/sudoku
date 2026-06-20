@@ -94,4 +94,4 @@
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/Sudoku.genruntimeconfig.cache
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/ref/Sudoku.dll
 /Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/Sudoku.sourcelink.json
-/Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/compressed/il6mcs3hll-ezlg255gby.gz
+/Users/jacobwinter/Desktop/workspace/sudoku/Sudoku/obj/Debug/net9.0/compressed/il6mcs3hll-pi2xajybji.gz
