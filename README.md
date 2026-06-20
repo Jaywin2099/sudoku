@@ -35,17 +35,24 @@ JavaScript on the front end (no SPA framework).
 
 ## Architecture
 
-```
-Sudoku/
+The app lives at the repository root (the project is **not** nested in a
+subfolder).
+
+```text
+.
+├── Sudoku.csproj                  # The web app project (root of the repo)
 ├── Program.cs                     # App bootstrap; registers SudokuService (singleton)
 ├── Controllers/
 │   └── HomeController.cs          # Pages + JSON API endpoints
 ├── Services/
-│   └── SudokuService.cs           # Core engine: generate / solve / analyze / conflicts
+│   ├── SudokuService.cs           # Core engine: generate / solve / analyze / conflicts
+│   ├── LogicalSolver.cs           # Human-style technique solver (in progress)
+│   └── SolveStep.cs               # A single deduced step (technique + cells)
 ├── Models/                        # View models (ErrorViewModel, NavLink)
 ├── Views/
 │   └── Home/Sudoku.cshtml         # The game UI + all client-side game logic
-└── wwwroot/                       # Static assets (css, js, bootstrap/jquery libs)
+├── wwwroot/                       # Static assets (css, js, bootstrap/jquery libs)
+└── Sudoku.Tests/                  # xUnit tests for SudokuService
 ```
 
 ### Core engine — `SudokuService`
@@ -76,18 +83,21 @@ A board is a flat `int[81]` in row-major order; `0` means empty.
 Requires the [.NET 9 SDK](https://dotnet.microsoft.com/download).
 
 ```bash
-cd Sudoku
 dotnet run
 ```
 
 Then open the URL printed in the console (e.g. `https://localhost:5001`) and
 click **Play Now**.
 
-To build without running:
+To build without running, or to run the tests:
 
 ```bash
 dotnet build
+dotnet test Sudoku.Tests        # target the test project explicitly
 ```
+
+> The app project lives at the repo root, so a bare `dotnet test` would target
+> the web app (which has no tests). Always point `dotnet test` at `Sudoku.Tests`.
 
 ---
 
