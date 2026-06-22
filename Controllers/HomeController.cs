@@ -74,6 +74,16 @@ public class HomeController : Controller
         return Json(new { solved = result.Solved, steps = result.Steps, finalBoard = result.FinalBoard });
     }
 
+    // View-agnostic model primitive: ALL legal single-cell moves (naked + hidden
+    // singles) for a board. Any front-end view of the move-tree consumes this same
+    // endpoint, so the model is identical regardless of how the view renders it.
+    [HttpPost("/api/sudoku/moves")]
+    public IActionResult Moves([FromBody] BoardRequest req)
+    {
+        if (req?.Board is not { Length: 81 }) return BadRequest();
+        return Json(new { moves = _logical.AllMoves(req.Board) });
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error() =>
         View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

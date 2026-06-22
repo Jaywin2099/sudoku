@@ -6,6 +6,10 @@ JavaScript on the front end (no SPA framework).
 
 ---
 
+new puzzle switches from setter to solver
+i want to see all the moves INDEPENDANT from each other at one node, then repeat for every possible option. that's actually helpful.
+
+
 ## Features
 
 - **Puzzle generation** with adjustable difficulty by clue count

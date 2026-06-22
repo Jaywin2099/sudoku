@@ -6,6 +6,78 @@
     /* Solve Path panel — scoped to this view so it stays out of the redesign's
        site.css. Uses the theme tokens, so it tracks light/dark automatically. */
     #steps-wrap.hidden { display: none; }
+
+    /* Solve Path is its own column on the right of the controls; widen the app
+       only while it's open, so the default board + controls layout is untouched. */
+    #sudoku-app.with-steps { max-width: 1100px; }
+    #steps-wrap { flex: 0 0 280px; }
+
+    /* Solve-path explorer: horizontally-scrollable Finder-style columns of circular
+       move-nodes. Past columns dim (combination-lock focus); the frontier stays lit. */
+    #explorer { display: flex; gap: 8px; margin-top: .6rem; overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; scroll-behavior: smooth; }
+    .excol { flex: 0 0 auto; width: 88px; display: flex; flex-direction: column; gap: 6px; opacity: .4; transition: opacity .15s; }
+    .excol.frontier, .excol:hover { opacity: 1; }
+    .excol-head { font-size: .58rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); text-align: center; }
+    .excol-nodes { display: flex; flex-direction: column; align-items: center; gap: 6px; max-height: 340px; overflow-y: auto; padding: 2px; }
+    .exnode {
+        width: 58px; height: 58px; flex: 0 0 auto; border-radius: 50%;
+        border: 2px solid var(--border-strong); background: var(--panel-sunken); color: var(--text);
+        cursor: pointer; font: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+        transition: transform .08s, box-shadow .12s, background .12s;
+    }
+    .exnode.naked  { border-color: #2e9e5b; }
+    .exnode.hidden { border-color: #2f6df6; }
+    .exnode:hover  { transform: scale(1.08); }
+    .exnode.chosen { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .exnode-dig  { font-size: 1.15rem; font-weight: 800; line-height: 1; }
+    .exnode-cell { font-size: .55rem; color: var(--text-muted); }
+    .excol-done  { font-size: .72rem; color: var(--text-muted); text-align: center; padding: .4rem 0; }
+
+    /* ── Setter vs Solve are different contexts: show only each mode's tools ──── */
+    #sudoku-app.setter-mode .solve-only        { display: none !important; }
+    #sudoku-app:not(.setter-mode) .setter-only { display: none !important; }
+
+    /* Setter recolors the whole workspace amber (accent token swap) so switching
+       reads as a context change, not a toggle. Translucent soft works on both themes. */
+    #sudoku-app.setter-mode {
+        --accent:       #d98324;
+        --accent-hover: #c2731a;
+        --accent-soft:  rgba(217, 131, 36, .16);
+    }
+    /* Setter also tints the whole page background a little amber (theme-aware) */
+    body.setter-bg                     { --bg: #f6ecd6; }
+    [data-theme="dark"] body.setter-bg { --bg: #17130b; }
+    .mode-banner {
+        display: flex; align-items: center; gap: .5rem;
+        padding: .5rem .9rem;
+        border: 1px solid var(--accent); border-radius: var(--radius);
+        background: var(--accent-soft); color: var(--accent);
+        font-weight: 700; font-size: .85rem;
+    }
+
+    /* Compact the numpad so the Input card isn't oversized in proportion */
+    #numpad { gap: 6px; grid-template-columns: repeat(3, 48px); justify-content: center; }
+    #numpad .num-btn   { height: 40px; font-size: 1.05rem; }
+    #numpad .erase-btn { height: 34px; font-size: .82rem; }
+
+    /* Scale the whole app down a touch */
+    #sudoku-app { zoom: .95; }
+
+    /* New ▾ generate popover — difficulty lives here instead of always on screen.
+       Opens UPWARD (the button sits low in the column, so downward runs off-screen). */
+    .action-row { display: flex; gap: 8px; margin-bottom: .7rem; }
+    .action-row > .gen-wrap, .action-row > #btn-steps { flex: 1; }
+    .gen-wrap { position: relative; }
+    #btn-generate { width: 100%; }
+    .gen-popover {
+        position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 30;
+        width: 230px; max-width: 80vw;
+        display: flex; flex-direction: column; gap: .6rem;
+        padding: .8rem; border-radius: var(--radius);
+        background: var(--panel); border: 1px solid var(--border); box-shadow: var(--shadow);
+    }
+    .gen-popover.hidden { display: none; }
+    .gen-go { width: 100%; }
     .steps-header { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
     .steps-header .card-title { margin: 0; }
     .steps-summary { font-size: .72rem; color: var(--text-muted); }
@@ -51,6 +123,26 @@
     /* Board highlights shown while viewing a step. */
     .cell.evidence { background: var(--warn-bg); }
     .cell.placed   { background: var(--good-bg) !important; color: var(--good) !important; box-shadow: inset 0 0 0 2px var(--good); }
+
+    /* ── Startup welcome popup (replaces the old header/footer chrome) ─────────── */
+    .welcome-overlay {
+        position: fixed; inset: 0; z-index: 100;
+        display: flex; align-items: center; justify-content: center;
+        padding: 1rem; background: rgba(12, 17, 28, .5);
+    }
+    .welcome-overlay.hidden { display: none; }
+    .welcome-card {
+        background: var(--panel); color: var(--text);
+        border: 1px solid var(--border); border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.6rem 1.7rem; width: min(92vw, 420px); text-align: center;
+    }
+    .welcome-title { font-size: 1.8rem; font-weight: 800; letter-spacing: -.02em; margin: 0 0 .3rem; }
+    .welcome-sub   { color: var(--text-muted); font-size: .88rem; line-height: 1.45; margin: 0 0 1.2rem; }
+    .welcome-section { margin-top: 1rem; }
+    .welcome-label { display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .5rem; }
+    .welcome-diffs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    #welcome-create { width: 100%; }
 </style>
 
 <div id="sudoku-app">
@@ -61,7 +153,7 @@
             <button data-bmode="solve" class="active">Solve</button>
         </div>
         <div class="header-spacer"></div>
-        <span class="timer" id="timer">0:00</span>
+        <span class="timer solve-only" id="timer">0:00</span>
         <button class="icon-btn" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle theme">🌙</button>
     </div>
 
@@ -77,12 +169,11 @@
             <!-- ── Input card: how you interact with the puzzle (self-contained) ── -->
             <div class="card-panel">
                 <h2 class="card-title">Input</h2>
-                <div class="segmented mode-selector" id="input-mode"
-                     title="Normal: place a digit · Corner/Center: pencil marks (Shift / Ctrl+digit) · Color: tint cells">
+                <div class="segmented mode-selector solve-only" id="input-mode"
+                     title="Normal: place a digit · Corner/Center: pencil marks (Shift / Ctrl+digit)">
                     <button data-mode="normal" class="active">Normal</button>
                     <button data-mode="corner">Corner</button>
                     <button data-mode="center">Center</button>
-                    <button data-mode="color">Color</button>
                 </div>
 
                 <div id="numpad">
@@ -115,25 +206,33 @@
                 </div>
             </div>
 
-            <!-- ── Puzzle-tools card: generation, testing, I/O (clearly separated) ── -->
+            <!-- ── Actions card: New (popover) + Solve Path always; authoring tools are setter-only ── -->
             <div class="card-panel">
-                <h2 class="card-title">Puzzle</h2>
-                <div class="preset-row">
-                    <button class="btn-preset" data-clues="36">Easy</button>
-                    <button class="btn-preset" data-clues="30">Med</button>
-                    <button class="btn-preset" data-clues="24">Hard</button>
-                    <button class="btn-preset" data-clues="17">Expert</button>
-                </div>
-                <div class="clue-inline">
-                    <span class="diff-label">Clues</span>
-                    <input type="number" id="clue-count" min="17" max="80" value="30" />
-                    <button id="btn-new" class="btn-tool btn-primary-tool">New Puzzle</button>
+                <h2 class="card-title">Actions</h2>
+
+                <div class="action-row">
+                    <div class="gen-wrap">
+                        <button id="btn-generate" class="btn-tool btn-primary-tool" aria-haspopup="true" aria-expanded="false">New ▾</button>
+                        <div class="gen-popover hidden" id="gen-popover">
+                            <div class="preset-row">
+                                <button class="btn-preset" data-clues="36">Easy</button>
+                                <button class="btn-preset" data-clues="30">Med</button>
+                                <button class="btn-preset" data-clues="24">Hard</button>
+                                <button class="btn-preset" data-clues="17">Expert</button>
+                            </div>
+                            <div class="clue-inline">
+                                <span class="diff-label">Clues</span>
+                                <input type="number" id="clue-count" min="17" max="80" value="30" />
+                            </div>
+                            <button id="btn-new" class="btn-tool btn-primary-tool gen-go">Generate</button>
+                        </div>
+                    </div>
+                    <button id="btn-steps" class="btn-tool setter-only">Solve Path</button>
                 </div>
 
-                <div class="tools-grid">
+                <div class="tools-grid setter-only">
                     <button id="btn-solve" class="btn-tool">Solve</button>
                     <button id="btn-analyze" class="btn-tool">Analyze</button>
-                    <button id="btn-steps" class="btn-tool">Solve Path</button>
                     <button id="btn-clear" class="btn-tool">Clear Board</button>
                     <button id="btn-clear-givens" class="btn-tool">Clear Givens</button>
                     <button id="btn-export" class="btn-tool">Export .sudk</button>
@@ -145,14 +244,33 @@
 
                 <div id="analyze-panel" class="analyze-panel hidden"></div>
             </div>
+        </div>
 
-            <div class="card-panel hidden" id="steps-wrap">
-                <div class="steps-header">
-                    <h2 class="card-title">Solve Path</h2>
-                    <span id="steps-summary" class="steps-summary"></span>
-                </div>
-                <div id="steps-list"></div>
+        <div class="card-panel hidden" id="steps-wrap">
+            <div class="steps-header">
+                <h2 class="card-title">Solve Path</h2>
+                <span id="steps-summary" class="steps-summary"></span>
             </div>
+            <div id="explorer"></div>
+        </div>
+    </div>
+</div>
+
+<div class="welcome-overlay" id="welcome">
+    <div class="welcome-card">
+        <h1 class="welcome-title">Sudoku</h1>
+        <p class="welcome-sub">Generate and solve puzzles, or author your own — Setter mode gives you a step-by-step Solve Path to check it.</p>
+        <div class="welcome-section">
+            <span class="welcome-label">Play a puzzle</span>
+            <div class="welcome-diffs">
+                <button class="btn-tool" data-start-clues="36">Easy</button>
+                <button class="btn-tool" data-start-clues="30">Medium</button>
+                <button class="btn-tool" data-start-clues="24">Hard</button>
+                <button class="btn-tool" data-start-clues="17">Expert</button>
+            </div>
+        </div>
+        <div class="welcome-section">
+            <button class="btn-tool btn-primary-tool" id="welcome-create">Create your own →</button>
         </div>
     </div>
 </div>
@@ -178,10 +296,13 @@
     let seconds = 0, timerInterval = null;
     let undoStack = [], redoStack = [];
 
-    // Solve-path (deductive solver) state
-    let solvePathBase = null;   // the puzzle we solved, preserved across step navigation
-    let pathSteps     = [];     // SolveStep[] from /api/sudoku/solve-steps
+    // Solve-path explorer state — the MODEL is the server endpoint /api/sudoku/moves
+    // (view-agnostic, so other front-ends can render the same move-tree differently).
+    let explorerBase = null;    // board the explorer started from
+    let explorerPath = [];      // chosen moves (SolveStep objects from /moves)
+    let explorerCols = [];      // moves[] per currently-rendered column
     let stepHighlight = null;   // { evidence:Set, placed:Set } — applied by renderBoard
+    const moveCache  = new Map();// board-string -> moves[] (a board always yields the same set)
 
     // ── Init ────────────────────────────────────────────────────────────────────
     buildGrid();
@@ -417,8 +538,9 @@
     function setBoardMode(m) {
         applyBoardMode(m);
         won = false;
+        resetPath();
         if (m === 'solve') checkWin();
-        setStatus(m === 'setter' ? 'Setter mode — typed digits become givens.' : '', m === 'setter' ? 'info' : '');
+        setStatus('');
         renderBoard();
     }
 
@@ -426,6 +548,19 @@
         boardMode = m;
         document.querySelectorAll('#board-mode button').forEach(b => b.classList.toggle('active', b.dataset.bmode === m));
         document.getElementById('board-frame').classList.toggle('setter', m === 'setter');
+        document.getElementById('sudoku-app').classList.toggle('setter-mode', m === 'setter');
+        document.body.classList.toggle('setter-bg', m === 'setter');
+    }
+
+    // ── Generate popover (difficulty lives here, off the New ▾ button) ───────────
+    function toggleGenPopover(e) {
+        if (e) e.stopPropagation();
+        const open = !document.getElementById('gen-popover').classList.toggle('hidden');
+        document.getElementById('btn-generate').setAttribute('aria-expanded', open);
+    }
+    function closeGenPopover() {
+        document.getElementById('gen-popover').classList.add('hidden');
+        document.getElementById('btn-generate').setAttribute('aria-expanded', 'false');
     }
 
     // ── Theme ─────────────────────────────────────────────────────────────────
@@ -440,8 +575,17 @@
         document.getElementById('theme-toggle').textContent = dark ? '☀' : '🌙';
     }
 
+    // ── Startup welcome ─────────────────────────────────────────────────────────
+    function hideWelcome() { document.getElementById('welcome').classList.add('hidden'); }
+    function startFromWelcome(clues) {
+        document.getElementById('clue-count').value = clues;
+        loadNewPuzzle();
+        hideWelcome();
+    }
+
     // ── API ───────────────────────────────────────────────────────────────────
     function loadNewPuzzle() {
+        closeGenPopover();
         const clues = clampClues(parseInt(document.getElementById('clue-count').value) || 30);
         document.getElementById('clue-count').value = clues;
         setStatus('Generating…');
@@ -548,88 +692,114 @@
         panel.innerHTML = '';
     }
 
-    // ── Solve path (deductive solver) ───────────────────────────────────────────
+    // ── Solve-path explorer ─────────────────────────────────────────────────────
+    // The MODEL is the server endpoint /api/sudoku/moves (board -> all legal single
+    // moves). This column view is just one consumer. Each column = every move on that
+    // board; click a node to play it (next column = moves on the result); click an
+    // earlier node to re-branch (truncate the path, make that node the new head).
     function solvePath() {
-        if (!solvePathBase) solvePathBase = board.slice();
-        setStatus('Solving…');
-        fetch('/api/sudoku/solve-steps', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ board: solvePathBase })
-        })
-        .then(r => r.json())
-        .then(data => {
-            pathSteps = data.steps || [];
-            renderStepsList(data);
-            setStatus('');
-            showStep(-1);   // start node = puzzle as given
-        });
-    }
-
-    function renderStepsList(data) {
-        const wrap    = document.getElementById('steps-wrap');
-        const list    = document.getElementById('steps-list');
-        const summary = document.getElementById('steps-summary');
-        wrap.classList.remove('hidden');
-
-        const n = pathSteps.length;
-        summary.textContent = data.solved
-            ? `solved in ${n} step${n === 1 ? '' : 's'}`
-            : `stopped after ${n} (needs more than singles)`;
-        summary.className = 'steps-summary ' + (data.solved ? 'ok' : 'warn');
-
-        let html = `<button class="step-item step-start" data-k="-1">
-            <span class="step-idx">0</span>
-            <span class="step-body"><span class="step-tech">Start</span>
-            <span class="step-exp">puzzle as given</span></span></button>`;
-
-        pathSteps.forEach((s, k) => {
-            html += `<button class="step-item tier-${s.tier}" data-k="${k}">
-                <span class="step-idx">${k + 1}</span>
-                <span class="step-body">
-                    <span class="step-tech">${s.technique}</span>
-                    <span class="step-exp">${s.explanation}</span>
-                </span></button>`;
-        });
-        list.innerHTML = html;
-
-        list.querySelectorAll('.step-item').forEach(btn =>
-            btn.addEventListener('click', () => showStep(parseInt(btn.dataset.k))));
-    }
-
-    // Viewing a solver step takes over the board display: show that snapshot on a
-    // clean slate (no pencil marks / colors) so the evidence + placed highlights read.
-    function showStep(k) {
-        won = false;
-        conflicts = new Set();
-        selected = -1;
-        resetMarks();
-
-        if (k < 0) {
-            board = solvePathBase.slice();
-            stepHighlight = null;
-        } else {
-            const s = pathSteps[k];
-            board = s.boardAfter.slice();
-            stepHighlight = {
-                evidence: new Set(s.evidenceCells || []),
-                placed:   new Set((s.placements || []).map(p => p.cell))
-            };
-        }
-        renderBoard();
-        document.querySelectorAll('.step-item').forEach(btn =>
-            btn.classList.toggle('active', parseInt(btn.dataset.k) === k));
+        explorerBase = board.slice();
+        explorerPath = [];
+        document.getElementById('steps-wrap').classList.remove('hidden');
+        document.getElementById('sudoku-app').classList.add('with-steps');
+        showHead();
+        renderExplorer();
     }
 
     function resetPath() {
-        solvePathBase = null;
-        pathSteps = [];
+        explorerBase = null;
+        explorerPath = [];
+        explorerCols = [];
         stepHighlight = null;
         const wrap = document.getElementById('steps-wrap');
         if (wrap) wrap.classList.add('hidden');
-        const list = document.getElementById('steps-list');
-        if (list) list.innerHTML = '';
+        document.getElementById('sudoku-app').classList.remove('with-steps');
+        const ex = document.getElementById('explorer');
+        if (ex) ex.innerHTML = '';
     }
+
+    function boardAtColumn(i) {
+        return i === 0 ? explorerBase : explorerPath[i - 1].boardAfter;
+    }
+
+    // Board display follows the head (last chosen move), or the base if none chosen.
+    function showHead() {
+        won = false; conflicts = new Set(); selected = -1; resetMarks();
+        if (explorerPath.length === 0) {
+            board = explorerBase.slice();
+            stepHighlight = null;
+        } else {
+            const last = explorerPath[explorerPath.length - 1];
+            board = last.boardAfter.slice();
+            stepHighlight = {
+                evidence: new Set(last.evidenceCells || []),
+                placed:   new Set((last.placements || []).map(p => p.cell))
+            };
+        }
+        renderBoard();
+    }
+
+    function chooseMove(col, move) {
+        if (!move) return;
+        explorerPath = explorerPath.slice(0, col).concat([move]);   // re-branch + extend
+        showHead();
+        renderExplorer();
+    }
+
+    // MODEL fetch: all legal moves for a board, cached (a board always yields the same set).
+    async function movesFor(bd) {
+        const key = bd.join(',');
+        if (moveCache.has(key)) return moveCache.get(key);
+        const resp = await fetch('/api/sudoku/moves', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ board: bd })
+        });
+        const moves = (await resp.json()).moves || [];
+        moveCache.set(key, moves);
+        return moves;
+    }
+
+    async function renderExplorer() {
+        const ex = document.getElementById('explorer');
+        const summary = document.getElementById('steps-summary');
+        const total = explorerPath.length + 1;       // columns 0 .. frontier
+        explorerCols = [];
+        for (let i = 0; i < total; i++) explorerCols.push(await movesFor(boardAtColumn(i)));
+
+        let html = '';
+        explorerCols.forEach((moves, i) => {
+            const chosen   = i < explorerPath.length ? explorerPath[i] : null;
+            const frontier = i === explorerPath.length;
+            let nodes;
+            if (moves.length === 0) {
+                nodes = `<div class="excol-done">${boardAtColumn(i).includes(0) ? 'no moves' : 'solved ✓'}</div>`;
+            } else {
+                nodes = moves.map((m, mi) => {
+                    const cell = m.placements[0].cell, digit = m.placements[0].digit;
+                    const sel  = chosen && chosen.placements[0].cell === cell && chosen.placements[0].digit === digit;
+                    const kind = m.technique === 'Naked Single' ? 'naked' : 'hidden';
+                    return `<button class="exnode ${kind}${sel ? ' chosen' : ''}" data-col="${i}" data-mi="${mi}" title="${m.technique}: ${rc(cell)} = ${digit}">
+                                <span class="exnode-dig">${digit}</span><span class="exnode-cell">${rc(cell)}</span>
+                            </button>`;
+                }).join('');
+            }
+            html += `<div class="excol ${frontier ? 'frontier' : 'past'}"><div class="excol-head">${i === 0 ? 'start' : i}</div><div class="excol-nodes">${nodes}</div></div>`;
+        });
+        ex.innerHTML = html;
+
+        if (summary) {
+            const fm = explorerCols[explorerPath.length];
+            summary.textContent = fm.length ? `${fm.length} move${fm.length === 1 ? '' : 's'}`
+                                 : boardAtColumn(explorerPath.length).includes(0) ? 'stuck' : 'solved';
+        }
+
+        ex.querySelectorAll('.exnode').forEach(btn =>
+            btn.addEventListener('click', () =>
+                chooseMove(+btn.dataset.col, explorerCols[+btn.dataset.col][+btn.dataset.mi])));
+        ex.scrollLeft = ex.scrollWidth;               // keep the frontier in view
+    }
+
+    function rc(cell) { return 'R' + (Math.floor(cell / 9) + 1) + 'C' + (cell % 9 + 1); }
 
     // ── Import / Export ─────────────────────────────────────────────────────────
     function exportBoard() {
@@ -709,6 +879,18 @@
         document.getElementById('btn-undo').addEventListener('click', undo);
         document.getElementById('btn-redo').addEventListener('click', redo);
         document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        document.getElementById('btn-generate').addEventListener('click', toggleGenPopover);
+        document.addEventListener('click', e => { if (!e.target.closest('.gen-wrap')) closeGenPopover(); });
+
+        // welcome popup
+        document.querySelectorAll('#welcome [data-start-clues]').forEach(btn =>
+            btn.addEventListener('click', () => startFromWelcome(btn.dataset.startClues)));
+        document.getElementById('welcome-create').addEventListener('click', () => {
+            clearBoard(); setBoardMode('setter'); hideWelcome();
+        });
+        document.getElementById('welcome').addEventListener('click', e => {
+            if (e.target.id === 'welcome') hideWelcome();
+        });
 
         document.getElementById('import-file').addEventListener('change', e => {
             if (e.target.files[0]) importBoard(e.target.files[0]);
@@ -755,8 +937,9 @@
         });
         document.querySelector('.btn-preset[data-clues="30"]').classList.add('active');
 
-        // global shortcuts: undo / redo
+        // global shortcuts: Esc closes the New popover, Ctrl+Z / Ctrl+Y undo / redo
         document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { closeGenPopover(); return; }
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
                 e.preventDefault();
                 e.shiftKey ? redo() : undo();
