@@ -9,29 +9,62 @@
 
     /* Solve Path is its own column on the right of the controls; widen the app
        only while it's open, so the default board + controls layout is untouched. */
-    #sudoku-app.with-steps { max-width: 1100px; }
-    #steps-wrap { flex: 0 0 280px; }
+    #sudoku-app.with-steps { max-width: 1320px; }
+    #steps-wrap { flex: 0 0 460px; }
 
-    /* Solve-path explorer: horizontally-scrollable Finder-style columns of circular
-       move-nodes. Past columns dim (combination-lock focus); the frontier stays lit. */
-    #explorer { display: flex; gap: 8px; margin-top: .6rem; overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; scroll-behavior: smooth; }
-    .excol { flex: 0 0 auto; width: 88px; display: flex; flex-direction: column; gap: 6px; opacity: .4; transition: opacity .15s; }
-    .excol.frontier, .excol:hover { opacity: 1; }
-    .excol-head { font-size: .58rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); text-align: center; }
-    .excol-nodes { display: flex; flex-direction: column; align-items: center; gap: 6px; max-height: 340px; overflow-y: auto; padding: 2px; }
+    /* Solve-path tree: YOU pick one move per column (your chosen path = the trunk),
+       click an earlier node to re-branch. Each column = the moves available at that
+       step. Lines: bold accent = your path; solid = a move REVEALED by your last pick;
+       faded = a move that was available anyway (it converges regardless of path).
+       The faint "if picked…" column previews where each unchosen move would lead;
+       a ghost reached from several moves (many faint lines in) is a convergence point. */
+    #explorer { position: relative; margin-top: .6rem; overflow: auto; max-height: 70vh; scroll-behavior: smooth; }
+    .exflow { position: relative; display: flex; gap: 30px; padding: 8px 6px 12px; width: max-content; }
+    #exsvg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 0; }
+    .excol { flex: 0 0 auto; width: 80px; display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 1; }
+    .excol-head { font-size: .56rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); text-align: center; }
+    .ghostcol .excol-head { color: color-mix(in srgb, var(--text-muted) 70%, transparent); font-style: italic; }
+    .excol-nodes { display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .exnode {
-        width: 58px; height: 58px; flex: 0 0 auto; border-radius: 50%;
-        border: 2px solid var(--border-strong); background: var(--panel-sunken); color: var(--text);
+        width: 54px; height: 54px; flex: 0 0 auto; border-radius: 50%;
+        border: 2px solid var(--border-strong); background: var(--panel); color: var(--text);
         cursor: pointer; font: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
         transition: transform .08s, box-shadow .12s, background .12s;
     }
+    /* Placement nodes = circles (singles, green/blue). Elimination nodes = rounded
+       squares coloured by technique tier. */
     .exnode.naked  { border-color: #2e9e5b; }
     .exnode.hidden { border-color: #2f6df6; }
-    .exnode:hover  { transform: scale(1.08); }
+    .exnode.elim { border-radius: 13px; width: 66px; height: 50px; }
+    .exnode.elim.tier2 { border-color: #d98324; }   /* locked candidates */
+    .exnode.elim.tier3 { border-color: #8b5cf6; }   /* subsets */
+    .exnode.elim.tier4 { border-color: #0ea5a5; }   /* fish */
+    .exnode.elim.tier5 { border-color: #db2777; }   /* wings */
+    .exnode:not(.ghost):hover { transform: scale(1.1); }
     .exnode.chosen { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-soft); }
-    .exnode-dig  { font-size: 1.15rem; font-weight: 800; line-height: 1; }
-    .exnode-cell { font-size: .55rem; color: var(--text-muted); }
+    .exnode.ghost  { width: 42px; height: 42px; border-style: dashed; opacity: .5; cursor: default; background: transparent; }
+    .exnode.ghost .exnode-dig { font-size: .9rem; }
+    .exnode-dig  { font-size: 1.1rem; font-weight: 800; line-height: 1; }
+    .exnode-cell { font-size: .5rem; color: var(--text-muted); }
+    .exedge { fill: none; stroke: var(--text-muted); }
+    .exedge.trunk    { stroke: var(--accent); stroke-width: 3.5; opacity: 1; }
+    .exedge.revealed { stroke: var(--text); stroke-width: 2; opacity: .8; }
+    .exedge.carried  { stroke: var(--text-muted); stroke-width: 1.4; opacity: .3; stroke-dasharray: 2 5; }
+    .exedge.ghost    { stroke: var(--text-muted); stroke-width: 1.2; opacity: .32; stroke-dasharray: 4 4; }
     .excol-done  { font-size: .72rem; color: var(--text-muted); text-align: center; padding: .4rem 0; }
+    /* legend */
+    .exlegend { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin-top: .55rem; font-size: .62rem; color: var(--text-muted); }
+    .exlegend span { display: inline-flex; align-items: center; gap: .3rem; }
+    .exlegend i { width: 18px; height: 0; border-top-width: 3px; border-top-style: solid; display: inline-block; }
+    .exlegend i.trunk    { border-color: var(--accent); }
+    .exlegend i.revealed { border-color: var(--text); border-top-width: 2px; }
+    .exlegend i.carried  { border-color: var(--text-muted); border-top-style: dashed; border-top-width: 2px; }
+    .exlegend i.ghostl   { border-color: var(--text-muted); border-top-style: dashed; opacity: .5; border-top-width: 2px; }
+    .exlegend b { font-weight: 800; font-size: .8rem; line-height: 1; }
+    .exlegend b.lg-place  { color: #2e9e5b; }
+    .exlegend b.lg-elim   { color: #8b5cf6; }
+    .exlegend b.lg-strike { color: var(--bad); text-decoration: line-through; }
+    .exlegend b.lg-block  { color: #2f6df6; }
 
     /* ── Setter vs Solve are different contexts: show only each mode's tools ──── */
     #sudoku-app.setter-mode .solve-only        { display: none !important; }
@@ -120,9 +153,25 @@
     .tier-6 { border-left-color: #d64545; }  /* chains */
     .tier-7 { border-left-color: #8a96ad; }  /* brute force */
 
-    /* Board highlights shown while viewing a step. */
-    .cell.evidence { background: var(--warn-bg); }
+    /* Board highlights shown while viewing a step. The whole UNIT the technique reasoned
+       in gets a clear wash (so "hidden single in row 5" visibly lights up row 5); the
+       evidence cells go amber; an ELIMINATION strikes the removed candidate(s) in red so
+       you can SEE it act (it changes candidates, not the board); a placed single previews
+       in green; and a hidden single rings the existing digits that force it (its blockers,
+       i.e. why it can't go anywhere else in the unit). */
+    .cell.hl-unit  { background: color-mix(in srgb, var(--accent) 20%, var(--cell)); }
+    .cell.evidence { background: var(--warn-bg) !important; }
+    .cell.removed  { background: var(--bad-bg) !important; box-shadow: inset 0 0 0 2px var(--bad); }
     .cell.placed   { background: var(--good-bg) !important; color: var(--good) !important; box-shadow: inset 0 0 0 2px var(--good); }
+    .cell.blocker  { box-shadow: inset 0 0 0 3px #2f6df6; }   /* existing digits that force a hidden single */
+    .cell .cand-place  { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                         color: var(--good); font-weight: 800; font-size: 1.5rem; opacity: .9; pointer-events: none; z-index: 2; }
+    /* Plain-English read-out of the hovered / chosen move — externalises the reasoning. */
+    .exnote { margin-top: .55rem; min-height: 1.1rem; font-size: .74rem; line-height: 1.4; color: var(--text); }
+    .exnote:empty { display: none; }
+    .exnote-kind { display: block; margin-top: .15rem; color: var(--text-muted); font-style: italic; font-size: .68rem; }
+    .show-all-toggle { font-size: .68rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: .3rem; cursor: pointer; user-select: none; }
+    .show-all-toggle input { accent-color: var(--accent); margin: 0; }
 
     /* ── Startup welcome popup (replaces the old header/footer chrome) ─────────── */
     .welcome-overlay {
@@ -170,10 +219,9 @@
             <div class="card-panel">
                 <h2 class="card-title">Input</h2>
                 <div class="segmented mode-selector solve-only" id="input-mode"
-                     title="Normal: place a digit · Corner/Center: pencil marks (Shift / Ctrl+digit)">
+                     title="Normal: place a digit · Notes: candidate marks (Shift+digit), shown 1–9 in fixed positions">
                     <button data-mode="normal" class="active">Normal</button>
-                    <button data-mode="corner">Corner</button>
-                    <button data-mode="center">Center</button>
+                    <button data-mode="notes">Notes</button>
                 </div>
 
                 <div id="numpad">
@@ -249,9 +297,23 @@
         <div class="card-panel hidden" id="steps-wrap">
             <div class="steps-header">
                 <h2 class="card-title">Solve Path</h2>
+                <label class="show-all-toggle" title="Fill every empty cell with its remaining candidates, so you can watch eliminations strike them out">
+                    <input type="checkbox" id="show-all-cands"> all candidates
+                </label>
                 <span id="steps-summary" class="steps-summary"></span>
             </div>
             <div id="explorer"></div>
+            <div id="exnote" class="exnote"></div>
+            <div class="exlegend">
+                <span><b class="lg-place">●</b>places a digit</span>
+                <span><b class="lg-elim">▢</b>eliminates (colour = technique)</span>
+                <span><b class="lg-strike">5</b>candidate removed</span>
+                <span><b class="lg-block">◎</b>forces a hidden single</span>
+                <span><i class="trunk"></i>your path</span>
+                <span><i class="revealed"></i>revealed by your move</span>
+                <span><i class="carried"></i>available anyway</span>
+                <span><i class="ghostl"></i>if you'd picked that</span>
+            </div>
         </div>
     </div>
 </div>
@@ -284,8 +346,8 @@
     // ── State ─────────────────────────────────────────────────────────────────
     let board       = new Array(81).fill(0);
     let givens      = new Array(81).fill(false);   // visual + (in solve mode) protected
-    let cornerMarks = Array.from({length:81}, () => new Set());
-    let centerMarks = Array.from({length:81}, () => new Set());
+    let marks = Array.from({length:81}, () => new Set());   // one candidate-note set per cell (positional 1–9)
+    let showAllCands = false;                                // explorer: fill empty cells with their remaining candidates
     let cellColors  = new Array(81).fill(null);
     let selected    = -1;
     let conflicts   = new Set();
@@ -296,12 +358,13 @@
     let seconds = 0, timerInterval = null;
     let undoStack = [], redoStack = [];
 
-    // Solve-path explorer state — the MODEL is the server endpoint /api/sudoku/moves
-    // (view-agnostic, so other front-ends can render the same move-tree differently).
-    let explorerBase = null;    // board the explorer started from
-    let explorerPath = [];      // chosen moves (SolveStep objects from /moves)
-    let explorerCols = [];      // moves[] per currently-rendered column
-    let stepHighlight = null;   // { evidence:Set, placed:Set } — applied by renderBoard
+    // Solve-path tree state — the MODEL is the server endpoint /api/sudoku/moves
+    // (view-agnostic: board -> all legal single moves). The path you click through is
+    // built entirely from that one model, so other front-ends can render it differently.
+    let explorerBase = null;    // board the path started from
+    let explorerPath = [];      // your chosen moves, in order (each a SolveStep from /moves)
+    let explorerCols = [];      // moves[] available at each column (0..frontier)
+    let stepHighlight = null;   // { units:Set, evidence:Set, blockers:Set, removedDigits:Map, placedDigit } — applied by renderBoard
     const moveCache  = new Map();// board-string -> moves[] (a board always yields the same set)
 
     // ── Init ────────────────────────────────────────────────────────────────────
@@ -334,16 +397,25 @@
     }
 
     function renderBoard() {
+        // Explorer candidate grid (for "show all" and elimination strikes), computed once.
+        const candSets = explorerBase ? currentCandSets() : null;
         document.querySelectorAll('.cell').forEach((cell, i) => {
-            // content: a big digit, OR pencil marks when empty
+            // content: a big digit, OR candidate marks when empty
             let html = '';
             if (board[i]) {
                 html = String(board[i]);
             } else {
-                if (centerMarks[i].size)
-                    html += `<span class="center-marks">${[...centerMarks[i]].sort().join('')}</span>`;
-                if (cornerMarks[i].size)
-                    html += `<div class="corner-marks">${[...cornerMarks[i]].sort().map(n => `<span>${n}</span>`).join('')}</div>`;
+                const isPlaced = stepHighlight && stepHighlight.placedDigit && stepHighlight.placedDigit.cell === i;
+                const touched  = stepHighlight && stepHighlight.removedDigits.has(i);
+                if (candSets && (showAllCands || touched) && !isPlaced) {
+                    // explorer: solver candidates — every empty cell when "show all" is on,
+                    // otherwise just the cells this move touches; strike what it removes.
+                    const struck = touched ? new Set(stepHighlight.removedDigits.get(i)) : null;
+                    html += candGridHtml(candSets[i], struck, true);
+                } else if (!isPlaced && marks[i].size) {
+                    html += candGridHtml(marks[i], null, false);   // the player's own notes
+                }
+                if (isPlaced) html += `<span class="cand-place">${stepHighlight.placedDigit.digit}</span>`;
             }
             cell.innerHTML = html;
 
@@ -359,8 +431,11 @@
             if (selected !== -1 && board[i] && board[i] === board[selected]) cell.classList.add('same-num');
             if (conflicts.has(i))                                            cell.classList.add('conflict');
             if (stepHighlight) {
-                if (stepHighlight.evidence.has(i)) cell.classList.add('evidence');
-                if (stepHighlight.placed.has(i))   cell.classList.add('placed');
+                if (inAnyUnit(i, stepHighlight.units))                                  cell.classList.add('hl-unit');
+                if (stepHighlight.evidence.has(i))                                      cell.classList.add('evidence');
+                if (stepHighlight.blockers.has(i))                                      cell.classList.add('blocker');
+                if (!board[i] && stepHighlight.removedDigits.has(i))                    cell.classList.add('removed');
+                if (stepHighlight.placedDigit && stepHighlight.placedDigit.cell === i)  cell.classList.add('placed');
             }
         });
     }
@@ -376,19 +451,17 @@
     // ── Undo / redo ─────────────────────────────────────────────────────────────
     function cloneState() {
         return {
-            board:       board.slice(),
-            givens:      givens.slice(),
-            cornerMarks: cornerMarks.map(s => [...s]),
-            centerMarks: centerMarks.map(s => [...s]),
-            cellColors:  cellColors.slice()
+            board:      board.slice(),
+            givens:     givens.slice(),
+            marks:      marks.map(s => [...s]),
+            cellColors: cellColors.slice()
         };
     }
     function applyState(s) {
-        board       = s.board.slice();
-        givens      = s.givens.slice();
-        cornerMarks = s.cornerMarks.map(a => new Set(a));
-        centerMarks = s.centerMarks.map(a => new Set(a));
-        cellColors  = s.cellColors.slice();
+        board      = s.board.slice();
+        givens     = s.givens.slice();
+        marks      = s.marks.map(a => new Set(a));
+        cellColors = s.cellColors.slice();
     }
     function pushHistory() {
         undoStack.push(cloneState());
@@ -434,9 +507,8 @@
         const idx = parseInt(e.currentTarget.dataset.idx);
         if (e.key >= '1' && e.key <= '9') {
             const d = parseInt(e.key);
-            if (e.shiftKey)                    enterValue(idx, d, 'corner');
-            else if (e.ctrlKey || e.metaKey)   enterValue(idx, d, 'center');
-            else                               enterValue(idx, d);
+            if (e.shiftKey || e.ctrlKey || e.metaKey) enterValue(idx, d, 'notes');   // either accelerator = candidate note
+            else                                      enterValue(idx, d);
             e.preventDefault();
         }
         else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') { enterValue(idx, 0); e.preventDefault(); }
@@ -468,14 +540,11 @@
 
         if (m === 'normal') {
             board[idx] = val;
-            if (val !== 0) { cornerMarks[idx].clear(); centerMarks[idx].clear(); }
+            if (val !== 0) marks[idx].clear();
             if (boardMode === 'setter') givens[idx] = (val !== 0);
-        } else if (m === 'corner') {
-            if (val === 0) cornerMarks[idx].clear();
-            else if (board[idx] === 0) toggle(cornerMarks[idx], val);
-        } else if (m === 'center') {
-            if (val === 0) centerMarks[idx].clear();
-            else if (board[idx] === 0) toggle(centerMarks[idx], val);
+        } else if (m === 'notes') {
+            if (val === 0) marks[idx].clear();
+            else if (board[idx] === 0) toggle(marks[idx], val);
         } else if (m === 'color') {
             if (val === 0) cellColors[idx] = null;
             else if (val <= PALETTE.length) cellColors[idx] = PALETTE[val - 1];
@@ -672,8 +741,7 @@
     }
 
     function resetMarks() {
-        cornerMarks = Array.from({length:81}, () => new Set());
-        centerMarks = Array.from({length:81}, () => new Set());
+        marks = Array.from({length:81}, () => new Set());
         cellColors  = new Array(81).fill(null);
     }
 
@@ -692,11 +760,15 @@
         panel.innerHTML = '';
     }
 
-    // ── Solve-path explorer ─────────────────────────────────────────────────────
+    // ── Solve-path tree ─────────────────────────────────────────────────────────
     // The MODEL is the server endpoint /api/sudoku/moves (board -> all legal single
-    // moves). This column view is just one consumer. Each column = every move on that
-    // board; click a node to play it (next column = moves on the result); click an
-    // earlier node to re-branch (truncate the path, make that node the new head).
+    // moves). YOU build a path: each column is the moves available at that step;
+    // click one to play it (the trunk grows, one cell at a time), click an earlier
+    // node to re-branch (truncate the path and head off differently). The lines tell
+    // the story: bold accent = your path; solid = a move your last pick REVEALED;
+    // faded = a move that was available anyway (it converges regardless of path).
+    // A faint "if picked…" column previews where each unchosen move would lead, and a
+    // ghost reached by several moves (many faint lines in) is a convergence point.
     function solvePath() {
         explorerBase = board.slice();
         explorerPath = [];
@@ -707,34 +779,145 @@
     }
 
     function resetPath() {
-        explorerBase = null;
-        explorerPath = [];
-        explorerCols = [];
-        stepHighlight = null;
+        explorerBase = null; explorerPath = []; explorerCols = []; stepHighlight = null;
         const wrap = document.getElementById('steps-wrap');
         if (wrap) wrap.classList.add('hidden');
         document.getElementById('sudoku-app').classList.remove('with-steps');
         const ex = document.getElementById('explorer');
         if (ex) ex.innerHTML = '';
+        showNote(null);
     }
 
-    function boardAtColumn(i) {
-        return i === 0 ? explorerBase : explorerPath[i - 1].boardAfter;
-    }
+    function boardAtColumn(i) { return i === 0 ? explorerBase : explorerPath[i - 1].boardAfter; }
+    function candsAtColumn(i) { return i === 0 ? null : explorerPath[i - 1].candsAfter; }
 
-    // Board display follows the head (last chosen move), or the base if none chosen.
+    // A move's stable identity, so the same deduction is matched across columns.
+    function moveSig(m) {
+        const pl = (m.placements || []).map(p => p.cell + ':' + p.digit).join(',');
+        const el = (m.eliminations || []).map(e => e.cell + ':' + e.digit).sort().join(',');
+        return m.technique + '|' + pl + '|' + el;
+    }
+    // Big glyph for an elimination node: the single digit it removes, or (for subsets
+    // touching several digits) how many distinct digits it removes.
+    function elimGlyph(m) {
+        const digs = [...new Set((m.eliminations || []).map(e => e.digit))];
+        return digs.length === 1 ? digs[0] : digs.length;
+    }
+    // What a move USED (cells + units) and DID (removed candidates / placed digit),
+    // for board highlighting.
+    function highlightFromMove(m) {
+        const removedDigits = new Map();                 // cell -> [digits] struck by this move
+        for (const e of (m.eliminations || [])) {
+            if (!removedDigits.has(e.cell)) removedDigits.set(e.cell, []);
+            removedDigits.get(e.cell).push(e.digit);
+        }
+        const placedDigit = m.places && (m.placements || []).length
+            ? { cell: m.placements[0].cell, digit: m.placements[0].digit } : null;
+        // Hidden single: ring the existing digits that FORCE it. In its unit every other
+        // empty cell is blocked from the digit by one of these, so the deduction is
+        // self-evident — you can see why the digit can't go anywhere else in the unit.
+        const blockers = new Set();
+        if (m.technique === 'Hidden Single' && placedDigit && (m.evidenceUnits || []).length) {
+            const before = m.boardAfter.slice(); before[placedDigit.cell] = 0;
+            for (const c of cellsInUnit(m.evidenceUnits[0])) {
+                if (c === placedDigit.cell || before[c] !== 0) continue;
+                for (const p of peersOf(c)) if (before[p] === placedDigit.digit) blockers.add(p);
+            }
+        }
+        return {
+            units:    new Set(m.evidenceUnits || []),
+            evidence: new Set(m.evidenceCells || []),
+            blockers, removedDigits, placedDigit
+        };
+    }
+    function cellsInUnit(u) { const out = []; for (let i = 0; i < 81; i++) if (inAnyUnit(i, [u])) out.push(i); return out; }
+    function peersOf(c)     { const out = []; for (let i = 0; i < 81; i++) if (i !== c && isPeer(i, c)) out.push(i); return out; }
+
+    // One positional candidate grid: digit d sits in its fixed row-major slot (1 = top-left
+    // … 9 = bottom-right), struck digits crossed out in red. Used for the player's notes and
+    // the explorer's "show all candidates".
+    function candGridHtml(digits, struck, isAll) {
+        let spans = '';
+        for (let d = 1; d <= 9; d++) {
+            if (!digits.has(d)) { spans += '<span></span>'; continue; }
+            spans += `<span${struck && struck.has(d) ? ' class="struck"' : ''}>${d}</span>`;
+        }
+        return `<div class="cand-grid${isAll ? ' all' : ''}">${spans}</div>`;
+    }
+    // Candidate sets for the state currently shown in the explorer (its head). Uses the
+    // threaded candidate grid when a move has been played (so earlier eliminations are
+    // reflected), else basic candidates of the base board.
+    function currentCandSets() {
+        if (!explorerBase) return null;
+        const mask = explorerPath.length ? explorerPath[explorerPath.length - 1].candsAfter : null;
+        return mask ? maskToSets(mask) : basicCands(board);
+    }
+    function maskToSets(mask) {
+        return Array.from({length:81}, (_, i) => {
+            const s = new Set();
+            for (let d = 1; d <= 9; d++) if (mask[i] & (1 << (d - 1))) s.add(d);
+            return s;
+        });
+    }
+    function basicCands(bd) {
+        const out = Array.from({length:81}, () => new Set());
+        for (let i = 0; i < 81; i++) {
+            if (bd[i]) continue;
+            for (let d = 1; d <= 9; d++) if (!peerHasDigit(bd, i, d)) out[i].add(d);
+        }
+        return out;
+    }
+    function peerHasDigit(bd, c, d) {
+        const r = Math.floor(c / 9), col = c % 9;
+        for (let k = 0; k < 9; k++) if (bd[r*9+k] === d || bd[k*9+col] === d) return true;
+        const br = Math.floor(r/3)*3, bc = Math.floor(col/3)*3;
+        for (let dr = 0; dr < 3; dr++) for (let dc = 0; dc < 3; dc++) if (bd[(br+dr)*9+(bc+dc)] === d) return true;
+        return false;
+    }
+    // Plain-English read-out of a move (or clear). Externalises the reasoning so a correct
+    // deduction reads as correct without trusting the node alone.
+    function showNote(m) {
+        const note = document.getElementById('exnote');
+        if (!note) return;
+        if (!m) { note.innerHTML = ''; return; }
+        const kind = m.places ? 'Places a digit.'
+                              : 'Removes candidates — changes the pencil marks, not the board (which is why it unlocks moves later, not now).';
+        note.innerHTML = `<strong>${esc(m.technique)}</strong> — ${esc(m.explanation)}<span class="exnote-kind">${kind}</span>`;
+    }
+    // Is a cell inside any of the given units? (0-8 rows, 9-17 cols, 18-26 boxes)
+    function inAnyUnit(cell, units) {
+        const r = Math.floor(cell / 9), c = cell % 9;
+        for (const u of units) {
+            if (u < 9) { if (r === u) return true; }
+            else if (u < 18) { if (c === u - 9) return true; }
+            else { const b = u - 18, br = Math.floor(b / 3) * 3, bc = (b % 3) * 3;
+                   if (r >= br && r < br + 3 && c >= bc && c < bc + 3) return true; }
+        }
+        return false;
+    }
+    const TECH_ABBR = {
+        'Naked Single': 'single', 'Hidden Single': 'single',
+        'Pointing Pair': 'point·2', 'Pointing Triple': 'point·3',
+        'Claiming Pair': 'claim·2', 'Claiming Triple': 'claim·3',
+        'Naked Pair': 'n.pair', 'Naked Triple': 'n.triple', 'Naked Quad': 'n.quad',
+        'Hidden Pair': 'h.pair', 'Hidden Triple': 'h.triple', 'Hidden Quad': 'h.quad',
+        'X-Wing': 'X-Wing', 'Swordfish': 'sword', 'Jellyfish': 'jelly',
+        'XY-Wing': 'XY-Wing', 'XYZ-Wing': 'XYZ-Wing'
+    };
+    const esc = s => (s || '').replace(/"/g, '&quot;');
+
+    // The board on screen follows the head (last picked move), or the base if none.
     function showHead() {
         won = false; conflicts = new Set(); selected = -1; resetMarks();
         if (explorerPath.length === 0) {
             board = explorerBase.slice();
             stepHighlight = null;
+            showNote(null);
         } else {
             const last = explorerPath[explorerPath.length - 1];
             board = last.boardAfter.slice();
-            stepHighlight = {
-                evidence: new Set(last.evidenceCells || []),
-                placed:   new Set((last.placements || []).map(p => p.cell))
-            };
+            stepHighlight = highlightFromMove(last);
+            showNote(last);
         }
         renderBoard();
     }
@@ -746,13 +929,15 @@
         renderExplorer();
     }
 
-    // MODEL fetch: all legal moves for a board, cached (a board always yields the same set).
-    async function movesFor(bd) {
-        const key = bd.join(',');
+    // MODEL fetch: all legal moves for a board+candidate state, cached. Passing the
+    // candidate grid threads earlier eliminations forward (an elimination changes the
+    // candidates, not the board), so the next column reflects what it unlocked.
+    async function movesFor(bd, cds) {
+        const key = bd.join(',') + '|' + (cds ? cds.join(',') : '');
         if (moveCache.has(key)) return moveCache.get(key);
         const resp = await fetch('/api/sudoku/moves', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ board: bd })
+            body: JSON.stringify({ board: bd, cands: cds })
         });
         const moves = (await resp.json()).moves || [];
         moveCache.set(key, moves);
@@ -762,41 +947,139 @@
     async function renderExplorer() {
         const ex = document.getElementById('explorer');
         const summary = document.getElementById('steps-summary');
-        const total = explorerPath.length + 1;       // columns 0 .. frontier
-        explorerCols = [];
-        for (let i = 0; i < total; i++) explorerCols.push(await movesFor(boardAtColumn(i)));
+        const frontier = explorerPath.length;
 
-        let html = '';
+        // Real columns: every move available at each step 0..frontier (singles +
+        // every elimination technique), threading candidates forward.
+        explorerCols = [];
+        for (let i = 0; i <= frontier; i++) explorerCols.push(await movesFor(boardAtColumn(i), candsAtColumn(i)));
+        const sigMaps = explorerCols.map(ms => { const map = new Map(); ms.forEach((mv, mi) => map.set(moveSig(mv), mi)); return map; });
+
+        // Frontier ghosts: for each move available now, peek one step ahead and collect
+        // the SINGLES it would unlock (a placement not already available). A ghost cell
+        // reached from several moves (many faint lines in) is a convergence point.
+        const frontMoves = explorerCols[frontier];
+        const frontPlaceCells = new Set(frontMoves.filter(m => m.places).map(m => m.placements[0].cell));
+        const ghosts = new Map();   // cell -> { digit, parents:Set<frontier mi> }
+        for (let mi = 0; mi < frontMoves.length; mi++) {
+            const opt = frontMoves[mi];
+            const after = await movesFor(opt.boardAfter, opt.candsAfter);
+            for (const m of after) {
+                if (!m.places) continue;                          // preview unlocked singles only
+                const gc = m.placements[0].cell;
+                if (frontPlaceCells.has(gc)) continue;            // already placeable, not newly unlocked
+                if (!ghosts.has(gc)) ghosts.set(gc, { digit: m.placements[0].digit, parents: new Set() });
+                ghosts.get(gc).parents.add(mi);
+            }
+        }
+
+        // Render columns. Singles = circles (place a digit); eliminations = rounded
+        // squares coloured by tier (click to apply and see what they unlock).
+        let cols = '';
         explorerCols.forEach((moves, i) => {
-            const chosen   = i < explorerPath.length ? explorerPath[i] : null;
-            const frontier = i === explorerPath.length;
+            const chosenSig = i < frontier ? moveSig(explorerPath[i]) : null;
             let nodes;
             if (moves.length === 0) {
                 nodes = `<div class="excol-done">${boardAtColumn(i).includes(0) ? 'no moves' : 'solved ✓'}</div>`;
             } else {
                 nodes = moves.map((m, mi) => {
-                    const cell = m.placements[0].cell, digit = m.placements[0].digit;
-                    const sel  = chosen && chosen.placements[0].cell === cell && chosen.placements[0].digit === digit;
-                    const kind = m.technique === 'Naked Single' ? 'naked' : 'hidden';
-                    return `<button class="exnode ${kind}${sel ? ' chosen' : ''}" data-col="${i}" data-mi="${mi}" title="${m.technique}: ${rc(cell)} = ${digit}">
-                                <span class="exnode-dig">${digit}</span><span class="exnode-cell">${rc(cell)}</span>
+                    const sel = moveSig(m) === chosenSig ? ' chosen' : '';
+                    if (m.places) {
+                        const cell = m.placements[0].cell, digit = m.placements[0].digit;
+                        const kind = m.technique === 'Naked Single' ? 'naked' : 'hidden';
+                        return `<button class="exnode place ${kind}${sel}" data-col="${i}" data-mi="${mi}" title="${esc(m.explanation)}">
+                                    <span class="exnode-dig">${digit}</span><span class="exnode-cell">${rc(cell)}</span>
+                                </button>`;
+                    }
+                    return `<button class="exnode elim tier${m.tier}${sel}" data-col="${i}" data-mi="${mi}" title="${esc(m.explanation)}">
+                                <span class="exnode-dig">${elimGlyph(m)}</span><span class="exnode-cell">${TECH_ABBR[m.technique] || m.technique}</span>
                             </button>`;
                 }).join('');
             }
-            html += `<div class="excol ${frontier ? 'frontier' : 'past'}"><div class="excol-head">${i === 0 ? 'start' : i}</div><div class="excol-nodes">${nodes}</div></div>`;
+            const head = i === 0 ? 'start' : (i === frontier ? 'now' : 'step ' + i);
+            cols += `<div class="excol"><div class="excol-head">${head}</div><div class="excol-nodes">${nodes}</div></div>`;
         });
-        ex.innerHTML = html;
 
-        if (summary) {
-            const fm = explorerCols[explorerPath.length];
-            summary.textContent = fm.length ? `${fm.length} move${fm.length === 1 ? '' : 's'}`
-                                 : boardAtColumn(explorerPath.length).includes(0) ? 'stuck' : 'solved';
+        // Ghost column: faint preview of the singles each unchosen move would unlock.
+        if (ghosts.size) {
+            const gnodes = [...ghosts.entries()].map(([gc, info]) =>
+                `<div class="exnode ghost" data-gcell="${gc}" title="unlocks ${rc(gc)} = ${info.digit}">
+                    <span class="exnode-dig">${info.digit}</span><span class="exnode-cell">${rc(gc)}</span>
+                 </div>`).join('');
+            cols += `<div class="excol ghostcol"><div class="excol-head">if picked…</div><div class="excol-nodes">${gnodes}</div></div>`;
         }
 
-        ex.querySelectorAll('.exnode').forEach(btn =>
-            btn.addEventListener('click', () =>
-                chooseMove(+btn.dataset.col, explorerCols[+btn.dataset.col][+btn.dataset.mi])));
-        ex.scrollLeft = ex.scrollWidth;               // keep the frontier in view
+        ex.innerHTML = `<div class="exflow"><svg id="exsvg"></svg>${cols}</div>`;
+        drawEdges(sigMaps, ghosts, frontier);
+
+        // Real nodes: click to play, hover to preview what the move uses/does on the board.
+        ex.querySelectorAll('.exnode[data-mi]').forEach(btn => {
+            const move = explorerCols[+btn.dataset.col][+btn.dataset.mi];
+            btn.addEventListener('click', () => chooseMove(+btn.dataset.col, move));
+            btn.addEventListener('mouseenter', () => { stepHighlight = highlightFromMove(move); showNote(move); renderBoard(); });
+            btn.addEventListener('mouseleave', showHead);
+        });
+
+        if (summary) {
+            const fm = explorerCols[frontier];
+            summary.textContent = fm.length ? `${fm.length} move${fm.length === 1 ? '' : 's'} now`
+                                 : boardAtColumn(frontier).includes(0) ? 'stuck' : 'solved ✓';
+        }
+        ex.scrollLeft = ex.scrollWidth;   // keep the frontier in view
+    }
+
+    // Draw the tree edges as SVG curves. The <svg> lives INSIDE .exflow (the scrolling
+    // content), so coordinates are content-relative and stay aligned at any scroll.
+    function drawEdges(sigMaps, ghosts, frontier) {
+        const ex = document.getElementById('explorer');
+        const flow = ex.querySelector('.exflow');
+        const svg = ex.querySelector('#exsvg');
+        if (!flow || !svg) return;
+
+        const W = flow.scrollWidth, H = flow.scrollHeight;
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+        svg.setAttribute('width', W); svg.setAttribute('height', H);
+        const fr = flow.getBoundingClientRect();
+
+        const posSel = sel => {
+            const el = ex.querySelector(sel);
+            if (!el) return null;
+            const r = el.getBoundingClientRect();
+            return { x: r.left - fr.left, y: r.top - fr.top + r.height / 2, w: r.width };
+        };
+        const posCM = (col, mi) => posSel(`.exnode[data-col="${col}"][data-mi="${mi}"]`);
+        const posG  = cell => posSel(`.exnode.ghost[data-gcell="${cell}"]`);
+        const curve = (a, b, cls) => {
+            const x1 = a.x + a.w, y1 = a.y, x2 = b.x, y2 = b.y, dx = Math.max(20, (x2 - x1) / 2);
+            return `<path d="M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}" class="exedge ${cls}"/>`;
+        };
+
+        let paths = '';
+        // For each chosen move, draw into the next column: trunk to the next chosen,
+        // solid to the moves it REVEALED (new this column), faded lifeline to moves that
+        // were already available in the previous column (carried — convergent).
+        for (let i = 0; i < frontier; i++) {
+            const chosenSig = moveSig(explorerPath[i]);
+            const aMi = sigMaps[i].get(chosenSig);
+            const a = aMi != null ? posCM(i, aMi) : null;
+            if (!a) continue;
+            const nextChosenSig = i + 1 < frontier ? moveSig(explorerPath[i + 1]) : null;
+            explorerCols[i + 1].forEach((m, mi) => {
+                const b = posCM(i + 1, mi);
+                if (!b) return;
+                const s = moveSig(m);
+                if (s === nextChosenSig) { paths += curve(a, b, 'trunk'); return; }
+                if (sigMaps[i].has(s)) { const a2 = posCM(i, sigMaps[i].get(s)); if (a2) paths += curve(a2, b, 'carried'); }
+                else paths += curve(a, b, 'revealed');
+            });
+        }
+        // Ghost previews: each unchosen frontier move → the singles it would unlock.
+        ghosts.forEach((info, gc) => {
+            const g = posG(gc);
+            if (!g) return;
+            info.parents.forEach(mi => { const p = posCM(frontier, mi); if (p) paths += curve(p, g, 'ghost'); });
+        });
+        svg.innerHTML = paths;
     }
 
     function rc(cell) { return 'R' + (Math.floor(cell / 9) + 1) + 'C' + (cell % 9 + 1); }
@@ -806,8 +1089,7 @@
         const payload = {
             board,
             givens,
-            cornerMarks: cornerMarks.map(s => [...s]),
-            centerMarks: centerMarks.map(s => [...s]),
+            marks: marks.map(s => [...s]),
             cellColors
         };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -825,9 +1107,10 @@
                 if (!Array.isArray(data.board) || data.board.length !== 81) throw new Error();
                 board    = data.board.map(Number);
                 givens   = Array.isArray(data.givens) ? data.givens.map(Boolean) : board.map(v => v !== 0);
-                // new fields are optional — old {board,givens} files still import cleanly
-                cornerMarks = hydrateMarks(data.cornerMarks);
-                centerMarks = hydrateMarks(data.centerMarks);
+                // new fields are optional — old {board,givens} files still import cleanly.
+                // Legacy files had separate corner/center marks; merge them into the one set.
+                marks = data.marks ? hydrateMarks(data.marks)
+                                   : mergeMarks(data.cornerMarks, data.centerMarks);
                 cellColors  = Array.isArray(data.cellColors) && data.cellColors.length === 81
                             ? data.cellColors.slice() : new Array(81).fill(null);
                 selected = -1;
@@ -850,6 +1133,11 @@
     function hydrateMarks(arr) {
         if (!Array.isArray(arr) || arr.length !== 81) return Array.from({length:81}, () => new Set());
         return arr.map(a => new Set(Array.isArray(a) ? a.map(Number) : []));
+    }
+    // Legacy .sudk had separate corner + center marks; fold both into the single set.
+    function mergeMarks(corner, center) {
+        const a = hydrateMarks(corner), b = hydrateMarks(center);
+        return a.map((s, i) => new Set([...s, ...b[i]]));
     }
 
     // ── Timer ─────────────────────────────────────────────────────────────────
@@ -875,6 +1163,7 @@
         document.getElementById('btn-solve').addEventListener('click', solveBoard);
         document.getElementById('btn-analyze').addEventListener('click', analyzeBoard);
         document.getElementById('btn-steps').addEventListener('click', solvePath);
+        window.addEventListener('resize', () => { if (explorerBase) renderExplorer(); });
         document.getElementById('btn-export').addEventListener('click', exportBoard);
         document.getElementById('btn-undo').addEventListener('click', undo);
         document.getElementById('btn-redo').addEventListener('click', redo);
@@ -907,6 +1196,12 @@
         // input-mode selector
         document.querySelectorAll('#input-mode button').forEach(btn => {
             btn.addEventListener('click', () => setMode(btn.dataset.mode));
+        });
+
+        // explorer: "show all candidates" toggle
+        document.getElementById('show-all-cands').addEventListener('change', e => {
+            showAllCands = e.target.checked;
+            renderBoard();
         });
 
         // board-mode (setter / solve)

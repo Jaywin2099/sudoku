@@ -71,9 +71,11 @@ Board = flat `int[81]`, row-major, `0` = empty. Methods:
 ## Front end (Sudoku.cshtml)
 
 All game logic lives in one IIFE `<script>` block at the bottom of the view.
-State: `board`, `givens`, `cornerMarks`/`centerMarks` (arrays of 81 `Set`s),
+State: `board`, `givens`, `marks` (one array of 81 `Set`s — the player's candidate
+notes; was previously split into `cornerMarks`/`centerMarks`, now unified),
 `cellColors` (81 colors or null), `selected`, `conflicts`, `won`, `mode` (input
-mode), `boardMode` (setter/solve), `undoStack`/`redoStack`, timer. Plus grid
+mode), `boardMode` (setter/solve), `showAllCands` (explorer candidate overlay),
+`undoStack`/`redoStack`, timer. Plus grid
 build, render, input, API calls, analyze panel, import/export. There is also a
 *client-side* conflict checker (`localConflicts`) used for win detection so a
 solve doesn't require a round-trip.
@@ -83,17 +85,24 @@ solve doesn't require a round-trip.
 applied to `<html data-theme>` by a tiny pre-paint script in `_Layout.cshtml`
 (reads `localStorage['sudoku-theme']`, falls back to `prefers-color-scheme`) so
 there's no flash; the in-app sun/moon button toggles + persists it. Layout:
-header + board (left) + two stacked cards (right) — an **Input card** (4-mode
+header + board (left) + two stacked cards (right) — an **Input card** (mode
 selector / numpad / color palette / undo-redo) and a **Puzzle-tools card**
 (generate / solve / analyze / I-O). The Puzzle-tools card is the intended future
 home of the technique-solver **reverse-tree inspector**.
 
 ### Input modes & interactions
 
-- **Four input modes** (`mode`): Normal (place digit), Corner / Center (pencil
-  marks, only on empty cells), Color (tint via the palette). The numpad and digit
-  keys act according to the active mode. **Keyboard accelerators** bypass the mode:
-  **Shift+digit = corner**, **Ctrl/Cmd+digit = center** (see `enterValue(idx,val,forceMode)`).
+- **Input modes** (`mode`): Normal (place digit) and Notes (candidate marks, only
+  on empty cells). (`color` mode still exists in the code + a palette div, but is
+  currently *unreachable* — no button wires it; dormant from the redesign.) The
+  numpad and digit keys act according to the active mode. **Keyboard accelerator**
+  bypasses the mode: **Shift+digit OR Ctrl/Cmd+digit = note** (see `enterValue(idx,val,forceMode)`).
+- **Candidates render ONE way**: a positional 3×3 grid where digit `d` sits in a
+  fixed row-major slot (1 = top-left … 9 = bottom-right), via `candGridHtml()`.
+  Stable slots mean a digit never moves as others are added/removed, and a single
+  candidate can be struck in place. This *one* renderer draws the player's `marks`,
+  the explorer's **"show all candidates"** overlay, and the red struck-out digit an
+  elimination removes. (Replaced the old packed corner-marks + joined center-marks.)
 - **Undo/redo** snapshot the whole mutable state (`cloneState`/`applyState`);
   `pushHistory()` is called *before* every mutation. Ctrl+Z / Ctrl+Shift+Z (or Ctrl+Y).
 
@@ -113,10 +122,12 @@ home of the technique-solver **reverse-tree inspector**.
   given) but **protected in Solve mode** (given cells can't be overwritten with a
   digit). This is a deliberate change from the old "givens never enforced"
   behavior, made safe by the explicit `boardMode` split.
-- `.sudk` is the app's export format: JSON `{ board, givens, cornerMarks,
-  centerMarks, cellColors }`. The mark/color fields are **optional** — older
-  `{ board, givens }`-only files still import cleanly (`importBoard` tolerates
-  missing fields). It's user save data — **gitignored**, never committed.
+- `.sudk` is the app's export format: JSON `{ board, givens, marks, cellColors }`.
+  The mark/color fields are **optional** — older `{ board, givens }`-only files
+  still import cleanly (`importBoard` tolerates missing fields). **Legacy
+  compatibility:** files written before the marks unification have `cornerMarks` +
+  `centerMarks` instead of `marks`; `importBoard` merges them (`mergeMarks`) so they
+  still load. It's user save data — **gitignored**, never committed.
 
 ## Build artifacts & .gitignore
 

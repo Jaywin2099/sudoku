@@ -309,38 +309,26 @@ body {
 .cell.won     { background: var(--won-bg) !important; color: var(--won-fg) !important; }
 .cell:focus   { box-shadow: inset 0 0 0 2px var(--accent); }
 
-/* pencil marks */
-.cell .corner-marks {
+/* pencil marks / candidates — ONE positional system: each digit sits in a fixed
+   3x3 slot by value, filled row-major (1 top-left … 9 bottom-right). Stable slots
+   mean a digit never moves as others are added/removed, and a single candidate can
+   be struck in place. Used for the player's notes AND the solver's "show all". */
+.cell .cand-grid {
     position: absolute;
-    inset: 3px;
+    inset: 2px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
-    font-size: .62rem;
+    font-size: .52rem;
     font-weight: 600;
     color: var(--text-muted);
+    line-height: 1;
     pointer-events: none;
 }
-.cell .corner-marks span { display: flex; align-items: center; justify-content: center; }
-/* place the up-to-9 corner digits: TL TR BL BR then edges then center */
-.cell .corner-marks span:nth-child(1){ grid-area: 1/1; justify-content:flex-start; align-items:flex-start; }
-.cell .corner-marks span:nth-child(2){ grid-area: 1/3; justify-content:flex-end;   align-items:flex-start; }
-.cell .corner-marks span:nth-child(3){ grid-area: 3/1; justify-content:flex-start; align-items:flex-end; }
-.cell .corner-marks span:nth-child(4){ grid-area: 3/3; justify-content:flex-end;   align-items:flex-end; }
-.cell .corner-marks span:nth-child(5){ grid-area: 1/2; align-items:flex-start; }
-.cell .corner-marks span:nth-child(6){ grid-area: 3/2; align-items:flex-end; }
-.cell .corner-marks span:nth-child(7){ grid-area: 2/1; justify-content:flex-start; }
-.cell .corner-marks span:nth-child(8){ grid-area: 2/3; justify-content:flex-end; }
-.cell .corner-marks span:nth-child(9){ grid-area: 2/2; }
-.cell .center-marks {
-    font-size: .72rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    letter-spacing: .5px;
-    pointer-events: none;
-    padding: 0 2px;
-    text-align: center;
-}
+.cell .cand-grid span { display: flex; align-items: center; justify-content: center; }
+.cell .cand-grid .struck { color: var(--bad); font-weight: 800; text-decoration: line-through; }
+.cell .cand-grid.all span { color: color-mix(in srgb, var(--text-muted) 70%, transparent); }
+.cell .cand-grid.all .struck { color: var(--bad); }
 
 /* ── Input card: mode selector ─────────────────────────────────────────────────── */
 .mode-selector { width: 100%; display: flex; margin-bottom: .9rem; }

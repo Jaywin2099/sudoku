@@ -27,7 +27,7 @@ namespace Sudoku.Services;
 // must only return a step that makes real progress — a placement, or at least
 // one elimination of a candidate that is currently present — otherwise the
 // Solve loop could spin forever re-finding the same pattern.
-public class LogicalSolver
+public partial class LogicalSolver
 {
     public SolveResult Solve(int[] puzzle)
     {
@@ -421,9 +421,10 @@ public class LogicalSolver
                         evidence.Add(byRow ? l * 9 + k : k * 9 + l);
 
             // eliminate the digit from cover lines on every NON-base line.
-            foreach (int k in Digits(cover))   // k = cover position index (0-8)
+            // `cover` is a bitmask of cover-line INDICES (bit position = index 0-8).
+            for (int coverIdx = 0; coverIdx < 9; coverIdx++)
             {
-                int coverIdx = k;
+                if ((cover & (1 << coverIdx)) == 0) continue;
                 for (int line = 0; line < 9; line++)
                 {
                     if (baseSet.Contains(line)) continue;

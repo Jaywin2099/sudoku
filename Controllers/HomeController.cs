@@ -77,11 +77,16 @@ public class HomeController : Controller
     // View-agnostic model primitive: ALL legal single-cell moves (naked + hidden
     // singles) for a board. Any front-end view of the move-tree consumes this same
     // endpoint, so the model is identical regardless of how the view renders it.
+    // Every legal move on a board across all techniques, given an optional candidate
+    // grid (so the explorer can thread eliminations from earlier moves forward).
+    // Singles place a digit; the rest eliminate candidates. Each move carries its
+    // evidence (cells + units) and full after-state (board + candidates).
     [HttpPost("/api/sudoku/moves")]
     public IActionResult Moves([FromBody] BoardRequest req)
     {
         if (req?.Board is not { Length: 81 }) return BadRequest();
-        return Json(new { moves = _logical.AllMoves(req.Board) });
+        var cands = req.Cands is { Length: 81 } ? req.Cands : null;
+        return Json(new { moves = _logical.AllMovesFull(req.Board, cands) });
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -92,4 +97,5 @@ public class HomeController : Controller
 public class BoardRequest
 {
     public int[] Board { get; set; } = [];
+    public int[]? Cands { get; set; }   // optional 9-bit candidate mask per cell (threads eliminations forward)
 }
